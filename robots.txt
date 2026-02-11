@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ias-b3-2-tsds.netlify.app/sitemap.xml

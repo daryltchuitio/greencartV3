@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GreenCart – Catalogue des paniers locaux et anti-gaspi</title>
+    <meta name="description" content="Découvrez les paniers GreenCart : paniers anti-gaspi, paniers locaux, offres spéciales familles et étudiants en France.">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="logo-greencart.png">
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WCPQVNVYLP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WCPQVNVYLP');
+</script>
+    
+<script src="cart.js"></script>
+<script src="auth-ui.js"></script>
+
+<div id="reviews-modal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reviews-modal-title">
+    <button type="button" class="modal-close" aria-label="Fermer">&times;</button>
+    <h2 id="reviews-modal-title">Avis sur ce produit</h2>
+    <div id="reviews-modal-content"></div>
+  </div>
+</div>
+
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <img src="logo-greencart.png" alt="Logo GreenCart" />
+                <span>GreenCart</span>
+            </div>
+            <nav aria-label="Navigation principale">
+                <ul class="nav-list">
+                    <li><a href="index.html#hero">Accueil</a></li>
+                    <li><a href="catalogue.html">Catalogue</a></li>
+                    <li><a href="producteurs.html">Producteurs</a></li>
+                    <li>
+                        <a href="panier.html" class="nav-cart-link">
+                            Panier
+                            <span class="cart-count cart-badge" aria-label="nombre d'articles dans le panier"></span>
+                        </a>
+                    </li>
+                    <li><a href="apropos.html">À propos</a></li>
+                    <li id="nav-auth">
+                        <a href="connexion.html" class="btn-outline">Connexion</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- fil d’Ariane -->
+     <nav class="breadcrumb" aria-label="Fil d’Ariane">
+      <a href="index.html">Accueil</a>
+      <span aria-hidden="true"> &gt; </span>
+      <span>Catalogue</span>
+    </nav>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main id="main">
+        <section class="catalogue-page">
+            <div class="container">
+                <h1>Catalogue des paniers GreenCart</h1>
+                <p class="section-intro">
+                  Trouvez tout le catalogue de paniers proposés sur GreenCart ici. 
+                </p>
+                <!-- FILTRES -->
+                 <div class="filters">
+                    <select id="filter-category" class="filter-select">
+                        <option value="all">Toutes les catégories</option>
+                        <option value="anti-gaspi">Anti-gaspi</option>
+                        <option value="etudiant">Étudiant</option>
+                        <option value="famille">Famille</option>
+                        <option value="terroir">Terroir</option>
+                    </select>
+                    <input
+                    id="filter-search"
+                    type="text"
+                    class="filter-input"
+                    placeholder="Rechercher un panier..."
+                    >
+                </div>
+                <div class="catalogue-actions">
+                    <a href="panier.html" class="btn-secondary">
+                        Voir mon panier
+                        <span class="cart-count cart-badge"></span>
+                    </a>
+                </div>       
+                <div class="seo-intro">
+                    <h2>Des paniers anti-gaspi et locaux toute l’année</h2>
+                    <p>
+                        Le catalogue GreenCart regroupe des paniers issus de producteurs locaux situés proches de chez vous.
+                        Vous y trouverez des paniers de saison adaptés à tous les besoins :
+                        paniers étudiants, paniers familles, paniers terroir, et paniers anti-gaspi disponibles à prix réduit.
+                    </p>
+                    <p>
+                        Les paniers anti-gaspi permettent de sauver des invendus agricoles encore frais. Ils offrent une alternative
+                        responsable et économique pour consommer local tout en limitant le gaspillage alimentaire. Chaque panier indique
+                        sa catégorie, son prix et son mode de retrait (marché, point de collecte ou livraison locale).
+                    </p>
+                </div>
+
+
+                <!-- LISTE DES PANIERS -->
+                 <div class="catalogue-grid catalogue-list" id="catalogue-list">
+                    <article class="product-card"
+                    data-id="p1"
+                    data-name="Panier anti-gaspi – Famille"
+                    data-price="14.90"
+                    data-category="anti-gaspi"
+                    data-origin="Hauts-de-France"
+                    data-producer="Ferme des Trois Chênes"
+                    data-description="3 à 4 personnes · 6 à 8 kg de fruits & légumes invendus mais frais."
+                    data-image="panier-anti-gaspi-famille.png">
+                    <img src="panier-anti-gaspi-famille.png" alt="Panier anti-gaspi Famille GreenCart" class="product-img">
+                    <h2>Panier anti-gaspi – Famille</h2>
+                    <p class="product-info">3 à 4 personnes · 6 à 8 kg de fruits & légumes invendus mais frais.</p>
+                    <ul class="product-details">
+                        <li><strong>Origine :</strong> Hauts-de-France</li>
+                        <li><strong>Producteur :</strong> Ferme des Trois Chênes</li>
+                        <li><strong>Catégorie :</strong> Anti-gaspi</li>
+                    </ul>
+                    <p class="product-price">14,90 €</p>
+                    <button class="btn-primary add-to-cart">Ajouter au panier</button>
+                </article>
+                <article class="product-card"
+                data-id="p2"
+                data-name="Panier local – Étudiant"
+                data-price="8.90"
+                data-category="etudiant"
+                data-origin="Cergy"
+                data-producer="Maraîcher du Nord"
+                data-description="1 à 2 personnes · produits de saison à petit prix."
+                data-image="panier-local-etudiant.jpg">
+                <img src="panier-local-etudiant.jpg" alt="Panier local Étudiant GreenCart" class="product-img">
+                <h2>Panier local – Étudiant</h2>
+                <p class="product-info">1 à 2 personnes · produits de saison à petit prix.</p>
+                <ul class="product-details">
+                    <li><strong>Origine :</strong> Cergy</li>
+                    <li><strong>Producteur :</strong> Maraîcher du Nord</li>
+                    <li><strong>Catégorie :</strong> Étudiant</li>
+                </ul>
+                <p class="product-price">8,90 €</p>
+                <button class="btn-primary add-to-cart">Ajouter au panier</button>
+            </article>
+            <article class="product-card"
+            data-id="p3"
+            data-name="Panier hebdo – Famille"
+            data-price="24.90"
+            data-category="famille"
+            data-origin="Pas-de-Calais"
+            data-producer="Coopérative Bio Locale"
+            data-description="Fruits, légumes et produits laitiers pour la semaine."
+            data-image="panier-hebdo-famille.png">
+            <img src="panier-hebdo-famille.png" alt="Panier hebdo Famille GreenCart" class="product-img">
+            <h2>Panier hebdo – Famille</h2>
+            <p class="product-info">Fruits, légumes et produits laitiers pour la semaine.</p>
+            <ul class="product-details">
+                <li><strong>Origine :</strong> Pas-de-Calais</li>
+                <li><strong>Producteur :</strong> Coopérative Bio Locale</li>
+                <li><strong>Catégorie :</strong> Famille</li>
+            </ul>
+            <p class="product-price">24,90 €</p>
+            <button class="btn-primary add-to-cart">Ajouter au panier</button>
+        </article>
+        <article class="product-card"
+        data-id="p4"
+        data-name="Panier terroir – Week-end"
+        data-price="19.90"
+        data-category="terroir"
+        data-origin="Lyon"
+        data-producer="Ferme du Terroir Flamand"
+        data-description="Fromages, œufs, boissons locales, produits fermiers."
+        data-image="panier-terroir-weekend.jpg">
+        <img src="panier-terroir-weekend.jpg" alt="Panier terroir Week-end GreenCart" class="product-img">
+        <h2>Panier terroir – Week-end</h2>
+        <p class="product-info">Fromages, œufs, boissons locales, produits fermiers.</p>
+        <ul class="product-details">
+            <li><strong>Origine :</strong> Lyon</li>
+            <li><strong>Producteur :</strong> Ferme du Terroir Flamand</li>
+            <li><strong>Catégorie :</strong> Terroir</li>
+        </ul>
+        <p class="product-price">19,90 €</p>
+        <button class="btn-primary add-to-cart">Ajouter au panier</button>
+    </article>
+    <article class="product-card"
+    data-id="p5"
+    data-name="Panier surprise – Anti-gaspi"
+    data-price="9.90"
+    data-category="anti-gaspi"
+    data-origin="Hauts-de-France"
+    data-producer="Association Anti-Gaspi MEL"
+    data-description="Panier surprise à récupérer sous 48h."
+    data-image="panier-surprise-anti-gaspi.jpg">
+    <img src="panier-surprise-anti-gaspi.jpg" alt="Panier surprise anti-gaspi GreenCart" class="product-img">
+    <h2>Panier surprise – Anti-gaspi</h2>
+    <p class="product-info">Panier surprise à récupérer sous 48h.</p>
+    <ul class="product-details">
+        <li><strong>Origine :</strong> Hauts-de-France</li>
+        <li><strong>Producteur :</strong> Association Anti-Gaspi MEL</li>
+        <li><strong>Catégorie :</strong> Anti-gaspi</li>
+    </ul>
+    <p class="product-price">9,90 €</p>
+    <button class="btn-primary add-to-cart">Ajouter au panier</button>
+</article>
+</div>
+</section>
+</main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <p><strong>GreenCart</strong> – Plateforme anti-gaspi & locale (projet pédagogique).</p>
+                <p>© 2026 GreenCart. Tous droits réservés.</p>
+            </div>
+            <div class="footer-links">
+                <a href="accessibilite.html">Accessibilité</a>
+                <a href="cgv.html">CGU – CGV – Politique de confidentialité</a>
+            </div>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const filterCategory = document.getElementById('filter-category');
+  const filterSearch = document.getElementById('filter-search');
+  const listEl = document.getElementById("catalogue-list");
+  const PRODUCER_PRODUCTS_KEY = "greencart_products";
+  const REVIEWS_KEY = "greencart_reviews";
+  const modal = document.getElementById("reviews-modal");
+  const modalContent = document.getElementById("reviews-modal-content");
+  const modalTitle = document.getElementById("reviews-modal-title");
+
+    function openReviewsModal(productId) {
+    if (!modal || !modalContent) return;
+
+    let reviews;
+    try {
+      reviews = JSON.parse(localStorage.getItem(REVIEWS_KEY) || "[]");
+    } catch {
+      reviews = [];
+    }
+    const filtered = reviews.filter(r => r.productId === productId);
+
+    modalContent.innerHTML = "";
+
+    if (filtered.length === 0) {
+      modalContent.innerHTML = `<p class="form-note">Aucun avis pour ce produit pour le moment.</p>`;
+    } else {
+      filtered
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .forEach(r => {
+          const card = document.createElement("article");
+          card.className = "review-card";
+
+          const d = new Date(r.date);
+          const dateStr = d.toLocaleString("fr-FR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+          });
+
+          const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
+          const author = r.userName || "Client GreenCart";
+
+          card.innerHTML = `
+            <p class="review-header">
+              <strong>${author}</strong> – <span class="review-date">${dateStr}</span>
+            </p>
+            <p class="review-stars">${stars}</p>
+            ${r.comment ? `<p class="review-comment">${r.comment}</p>` : ""}
+          `;
+          modalContent.appendChild(card);
+        });
+    }
+
+    modal.setAttribute("aria-hidden", "false");
+    modal.classList.add("open");
+  }
+
+  function closeReviewsModal() {
+    if (!modal) return;
+    modal.setAttribute("aria-hidden", "true");
+    modal.classList.remove("open");
+  }
+
+  if (modal) {
+    const backdrop = modal.querySelector(".modal-backdrop");
+    const closeBtn = modal.querySelector(".modal-close");
+
+    backdrop.addEventListener("click", closeReviewsModal);
+    closeBtn.addEventListener("click", closeReviewsModal);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("open")) {
+        closeReviewsModal();
+      }
+    });
+  }
+
+  // clic sur "X avis"
+  if (listEl) {
+    listEl.addEventListener("click", (e) => {
+      const ratingBtn = e.target.closest(".rating-link");
+      if (ratingBtn) {
+        const pid = ratingBtn.dataset.productId;
+        openReviewsModal(pid);
+      }
+    });
+  }
+
+  // -------------------------
+  // Charger les produits créés par les producteurs
+  // -------------------------
+  function loadProducerProducts() {
+    const raw = localStorage.getItem(PRODUCER_PRODUCTS_KEY);
+    if (!raw || !listEl) return;
+
+    let products;
+    try {
+      products = JSON.parse(raw);
+    } catch {
+      return;
+    }
+    if (!Array.isArray(products)) return;
+
+    products.forEach(p => {
+      const article = document.createElement("article");
+      article.className = "product-card";
+      article.dataset.id = p.id;
+      article.dataset.name = p.name;
+      article.dataset.price = p.price;
+      article.dataset.category = p.category;
+      article.dataset.origin = p.origin;
+      article.dataset.producer = p.producerName || "Producteur local GreenCart";
+      article.dataset.description = p.description;
+      article.dataset.image = p.image || "panier-anti-gaspi-famille.png";
+      article.dataset.region = p.region || "";
+      article.dataset.dlc = p.dlc || "";
+
+      article.innerHTML = `
+        <img src="${article.dataset.image}" alt="${p.name}" class="product-img">
+        <h2>${p.name}</h2>
+        <p class="product-info">${p.description}</p>
+        <ul class="product-details">
+          <li><strong>Origine :</strong> ${p.origin}</li>
+          <li><strong>Producteur :</strong> ${article.dataset.producer}</li>
+          ${p.region ? `<li><strong>Région :</strong> ${p.region}</li>` : ""}
+          ${p.dlc ? `<li><strong>DLC :</strong> ${p.dlc}</li>` : ""}
+          <li><strong>Catégorie :</strong> ${p.category}</li>
+        </ul>
+        <p class="product-price">${p.price.toFixed(2)} €</p>
+        <button class="btn-primary add-to-cart">Ajouter au panier</button>
+      `;
+      listEl.appendChild(article);
+    });
+  }
+
+  loadProducerProducts();
+
+    // -------------------------
+  // Affichage des notes moyennes
+  // -------------------------
+  function renderRatings() {
+    let reviews;
+    try {
+      reviews = JSON.parse(localStorage.getItem(REVIEWS_KEY) || "[]");
+    } catch {
+      reviews = [];
+    }
+    if (!Array.isArray(reviews) || reviews.length === 0) return;
+
+    // Calcul des stats par produit
+    const stats = {};
+    reviews.forEach(r => {
+      if (!r.productId || typeof r.rating !== "number") return;
+      if (!stats[r.productId]) {
+        stats[r.productId] = { sum: 0, count: 0 };
+      }
+      stats[r.productId].sum += r.rating;
+      stats[r.productId].count += 1;
+    });
+
+    const cards = document.querySelectorAll("#catalogue-list .product-card");
+    cards.forEach(card => {
+      const pid = card.dataset.id;
+      if (!pid || !stats[pid]) return;
+
+      const { sum, count } = stats[pid];
+      const avg = sum / count;
+
+      const rounded = Math.round(avg); // arrondi pour les étoiles
+      const stars = "★".repeat(rounded) + "☆".repeat(5 - rounded);
+
+      let ratingEl = card.querySelector(".product-rating");
+      if (!ratingEl) {
+        ratingEl = document.createElement("p");
+        ratingEl.className = "product-rating";
+
+        const priceEl = card.querySelector(".product-price");
+        if (priceEl) {
+          priceEl.insertAdjacentElement("afterend", ratingEl);
+        } else {
+          card.appendChild(ratingEl);
+        }
+      }
+
+      ratingEl.innerHTML = `
+      <span class="rating-stars">${stars}</span>
+      <button 
+      type="button" 
+      class="rating-link" 
+      data-product-id="${pid}">
+      ${avg.toFixed(1)}/5 – ${count} avis
+      </button>
+      `;
+
+    });
+  }
+
+    renderRatings();
+
+  // -------------------------
+  // FILTRES
+  // -------------------------
+  function applyFilters() {
+    const category = filterCategory ? filterCategory.value : "all";
+    const search = filterSearch ? filterSearch.value.toLowerCase() : "";
+
+    const cards = document.querySelectorAll("#catalogue-list .product-card");
+
+    cards.forEach((card) => {
+      const cardCategory = card.dataset.category;
+      const title = (card.dataset.name || card.querySelector("h2")?.textContent || "").toLowerCase();
+      const info = (card.dataset.description || card.querySelector(".product-info")?.textContent || "").toLowerCase();
+
+      const matchCategory = category === 'all' || category === cardCategory;
+      const matchSearch = title.includes(search) || info.includes(search);
+
+      card.style.display = (matchCategory && matchSearch) ? '' : 'none';
+    });
+  }
+
+  if (filterCategory && filterSearch) {
+    filterCategory.addEventListener('change', applyFilters);
+    filterSearch.addEventListener('input', applyFilters);
+  }
+
+  // -------------------------
+  // PANIER (localStorage)
+  // -------------------------
+  function getCart() {
+    return JSON.parse(localStorage.getItem("greencart_cart") || "[]");
+  }
+
+  function saveCart(cart) {
+    localStorage.setItem("greencart_cart", JSON.stringify(cart));
+  }
+
+  function addToCart(product) {
+    const cart = getCart();
+    const existing = cart.find(p => p.id === product.id);
+
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      cart.push({ ...product, qty: 1 });
+    }
+
+    saveCart(cart);
+    if (typeof updateCartCount === "function") {
+      updateCartCount();
+    }
+    alert(product.name + " ajouté au panier !");
+  }
+
+  // Event delegation : un seul listener pour tout le catalogue
+  if (listEl) {
+    listEl.addEventListener("click", (e) => {
+      const btn = e.target.closest(".add-to-cart");
+      if (!btn) return;
+
+      const card = btn.closest(".product-card");
+      if (!card) return;
+
+      const product = {
+        id: card.dataset.id,
+        name: card.dataset.name,
+        price: parseFloat(card.dataset.price),
+        origin: card.dataset.origin,
+        producer: card.dataset.producer,
+        description: card.dataset.description,
+        image: card.dataset.image
+      };
+
+      addToCart(product);
+    });
+  }
+
+  // Appliquer les filtres au chargement
+  applyFilters();
+});
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GreenCart – Espace producteur</title>
+    <meta name="description" content="Espace personnel des producteurs sur GreenCart : gérez vos paniers, suivez les commandes et interagissez avec les consommateurs.">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="logo-greencart.png">
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WCPQVNVYLP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WCPQVNVYLP');
+</script>
+    
+<script src="auth-ui.js"></script>
+
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <img src="logo-greencart.png" alt="Logo GreenCart" />
+                <span>GreenCart</span>
+            </div>
+            <nav aria-label="Navigation principale">
+                <ul class="nav-list">
+                    <li><a href="index.html#hero">Accueil</a></li>
+                    <li><a href="catalogue.html">Catalogue</a></li>
+                    <li><a href="producteurs.html">Producteurs</a></li>
+                    <li><a href="panier.html">Panier</a></li>
+                    <li><a href="apropos.html">À propos</a></li>
+                    <li><button id="logout-btn" class="btn-outline">Déconnexion</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main">
+        <section class="dashboard-page">
+            <div class="container">
+                <h1>Espace producteur</h1>
+                <p id="user-welcome" class="section-intro"></p>
+
+<div class="dashboard-grid">
+    <article class="about-card">
+        <h2>Publier un produit</h2>
+        <p>Ajoutez un panier ou un produit à votre catalogue GreenCart.</p>
+
+        <form id="product-form" class="auth-form" aria-label="Formulaire de publication de produit">
+            <div class="form-field">
+                <label for="prod-name">Nom du produit / panier</label>
+                <input type="text" id="prod-name" required placeholder="Ex : Panier légumes de saison" />
+            </div>
+
+            <div class="form-field">
+                <label for="prod-description">Description</label>
+                <textarea id="prod-description" required placeholder="Courte description du contenu du panier"></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="prod-price">Prix (€)</label>
+                    <input type="number" id="prod-price" min="0" step="0.1" required />
+                </div>
+                <div class="form-field">
+                    <label for="prod-category">Catégorie</label>
+                    <select id="prod-category" required>
+                        <option value="anti-gaspi">Anti-gaspi</option>
+                        <option value="etudiant">Étudiant</option>
+                        <option value="famille">Famille</option>
+                        <option value="terroir">Terroir</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="prod-origin">Origine (ex : Hauts-de-France)</label>
+                    <input type="text" id="prod-origin" required />
+                </div>
+                <div class="form-field">
+                    <label for="prod-region">Région / zone (ex : MEL, Flandre)</label>
+                    <input type="text" id="prod-region" />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-field">
+                    <label for="prod-dlc">Date limite de consommation</label>
+                    <input type="date" id="prod-dlc" />
+                </div>
+                <div class="form-field">
+                    <label for="prod-image">Image du produit (PNG/JPG/WebP – max 300 Ko)</label>
+                    <input type="file" id="prod-image" accept="image/png,image/jpeg,image/webp" />
+                    <p class="form-note">Conseil : privilégiez une image légère (ex : JPG), car vous ne pouvez pas deppasser 300Ko.</p>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary">Publier le produit</button>
+            <p id="product-message" class="form-note auth-message"></p>
+        </form>
+    </article>
+
+    <article class="about-card">
+        <h2>Mes produits publiés</h2>
+        <p>Les produits ci-dessous s’afficheront dans le catalogue public.</p>
+        <div id="my-products" class="orders-list">
+            <p class="form-note">Vous n’avez pas encore publié de produit.</p>
+        </div>
+    </article>
+
+    <article class="about-card">
+        <h2>Conseils & prévisions</h2>
+        <p class="section-intro">
+            Ces prévisions sont calculées à partir de vos commandes passées.
+        </p>
+        
+        <h3>Résumé des ventes récentes</h3>
+        <div id="forecasts-history" class="forecast-block">
+            <p class="form-note">Pas encore assez de commandes pour établir un historique.</p>
+        </div>
+
+        <h3>Prévisions pour le mois prochain</h3>
+        <div id="forecasts-next-month" class="forecast-block">
+            <p class="form-note">Les prévisions seront disponibles dès que vous aurez au moins une commande.</p>
+        </div>
+        <p id="forecasts-note" class="form-note">
+            Les coefficients saisonniers sont basés sur des hypothèses simplifiées.
+        </p>
+
+    </article>
+
+</div>
+
+<h2>Mes commandes reçues</h2>
+<p class="section-intro">
+    Voici les commandes qui contiennent au moins un de vos produits publiés sur GreenCart.
+</p>
+<div id="producer-orders" class="orders-list">
+    <p class="form-note">Vous n’avez pas encore reçu de commande.</p>
+</div>
+
+ <h2>Segmentation de mes clients</h2>
+        <p class="section-intro">
+            Les profils ci-dessous sont calculés à partir des commandes contenant vos produits
+            (segmentation simplifiée).
+        </p>
+        <div id="segments-block" class="forecast-block">
+            <p class="form-note">En attente de commandes pour calculer des segments.</p>
+        </div>
+
+</div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+            <p><strong>GreenCart</strong> – Plateforme anti-gaspi & locale (projet pédagogique).</p>
+            <p>© 2026 GreenCart. Tous droits réservés.</p>
+        </div>
+        <div class="footer-links">
+            <a href="accessibilite.html">Accessibilité</a>
+            <a href="cgv.html">CGU – CGV – Politique de confidentialité</a>
+        </div>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const CURRENT_USER_KEY = "greencart_current_user";
+    const PRODUCTS_KEY = "greencart_products";
+    const ORDERS_KEY = "greencart_orders";
+    const USERS_KEY = "greencart_orders";
+
+    const userStr = localStorage.getItem(CURRENT_USER_KEY);
+    if (!userStr) {
+        window.location.href = "connexion.html";
+        return;
+    }
+
+    const user = JSON.parse(userStr);
+
+    if (user.role !== "producteur") {
+        window.location.href = "connexion.html";
+        return;
+    }
+
+    const welcome = document.getElementById("user-welcome");
+    welcome.textContent = "Bonjour " + user.name + ", bienvenue dans votre espace producteur.";
+
+    const logoutBtn = document.getElementById("logout-btn");
+    logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem(CURRENT_USER_KEY);
+        window.location.href = "connexion.html";
+    });
+
+    function loadProducts() {
+        return JSON.parse(localStorage.getItem(PRODUCTS_KEY) || "[]");
+    }
+
+    function saveProducts(products) {
+        localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+    }
+
+    function loadOrders() {
+        return JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
+    }
+
+        function loadUsers() {
+        return JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    }
+
+    // --- Prévisions : saisonnalité ---
+function getSeasonFactor(month, category) {
+// month = 1..12
+// catégorie = anti-gaspi, etudiant, famille, terroir
+if (month >= 6 && month <= 8) { // été
+if (category === "famille" || category === "terroir") return 1.2;
+return 1.1;
+}
+if (month === 12 || month === 1) { // fêtes + plein hiver
+if (category === "terroir") return 1.3;
+return 1.1;
+}
+if (month >= 3 && month <= 5) { // printemps
+if (category === "anti-gaspi") return 1.2;
+return 1.1;
+}
+if (month >= 9 && month <= 11) { // automne
+return 1.05;
+}
+// par défaut
+return 1.0;
+}
+
+/* function renderSegments */
+    function renderSegments() {
+        const container = document.getElementById("segments-block");
+        if (!container) return;
+
+        const allProducts = loadProducts();
+        const myProducts = allProducts.filter(p => p.producerId === user.id);
+        if (myProducts.length === 0) {
+            container.innerHTML = '<p class="form-note">Publiez au moins un produit pour analyser vos clients.</p>';
+            return;
+        }
+
+        const myProductIds = myProducts.map(p => p.id);
+        const allOrders = loadOrders();
+        const allUsers = loadUsers();
+
+        if (allOrders.length === 0) {
+            container.innerHTML = '<p class="form-note">Aucune commande pour l’instant : la segmentation sera disponible dès les premières ventes.</p>';
+            return;
+        }
+
+        // Stats par utilisateur (uniquement ceux qui ont acheté AU MOINS un produit du producteur)
+        const statsByUser = {}; // userId -> { totalOrders, totalSpent, firstDate, lastDate, categoriesCount }
+        allOrders.forEach(order => {
+            const items = order.items || [];
+            const itemsForProducer = items.filter(it => myProductIds.includes(it.id));
+            if (itemsForProducer.length === 0) return;
+
+            const d = new Date(order.date);
+            if (isNaN(d)) return;
+
+            let totalForProducer = 0;
+            const localCategories = {};
+
+            itemsForProducer.forEach(it => {
+                const lineTotal = (it.price * it.qty);
+                totalForProducer += lineTotal;
+
+                // retrouver la catégorie du produit
+                const prod = myProducts.find(p => p.id === it.id);
+                const cat = prod ? (prod.category || "autre") : "autre";
+                if (!localCategories[cat]) localCategories[cat] = 0;
+                localCategories[cat] += (it.qty || 1);
+            });
+
+            if (totalForProducer === 0) return;
+
+            if (!statsByUser[order.userId]) {
+                statsByUser[order.userId] = {
+                    totalOrders: 0,
+                    totalSpent: 0,
+                    firstDate: d,
+                    lastDate: d,
+                    categoriesCount: {}
+                };
+            }
+
+            const st = statsByUser[order.userId];
+            st.totalOrders += 1;
+            st.totalSpent += totalForProducer;
+            if (d < st.firstDate) st.firstDate = d;
+            if (d > st.lastDate) st.lastDate = d;
+
+            Object.entries(localCategories).forEach(([cat, qty]) => {
+                if (!st.categoriesCount[cat]) st.categoriesCount[cat] = 0;
+                st.categoriesCount[cat] += qty;
+            });
+        });
+
+        const userIds = Object.keys(statsByUser);
+        if (userIds.length === 0) {
+            container.innerHTML = '<p class="form-note">Aucun client n’a encore commandé vos produits.</p>';
+            return;
+        }
+
+        // Fonction utilitaire pour trouver l'utilisateur et sa catégorie dominante
+        function getUserInfo(userId, stats) {
+            const user = allUsers.find(u => u.id === userId);
+            const name = user ? (user.name || user.email || "Client GreenCart") : "Client GreenCart";
+
+            const cats = stats.categoriesCount || {};
+            let favCat = "autre";
+            let maxQty = 0;
+            Object.entries(cats).forEach(([cat, qty]) => {
+                if (qty > maxQty) {
+                    maxQty = qty;
+                    favCat = cat;
+                }
+            });
+
+            return { name, favCat };
+        }
+
+        // Règles de segmentation simplifiées
+        function getSegmentLabel(stats, favCat) {
+            const avgBasket = stats.totalSpent / stats.totalOrders;
+
+            let daysSpan = (stats.lastDate - stats.firstDate) / (1000 * 60 * 60 * 24);
+            if (daysSpan < 1) daysSpan = 1;
+            const frequency = stats.totalOrders / daysSpan; // commandes par jour 
+
+            if (favCat === "etudiant" && avgBasket < 15 && stats.totalOrders >= 2) {
+                return "Étudiant budget serré";
+            }
+            if (favCat === "famille" && avgBasket >= 25 && stats.totalOrders >= 3) {
+                return "Famille fidèle";
+            }
+            if (favCat === "anti-gaspi" && stats.totalOrders >= 2) {
+                return "Chasseur d’anti-gaspi";
+            }
+            if (favCat === "terroir" && avgBasket >= 25) {
+                return "Gourmet terroir";
+            }
+            if (frequency > 0.1 && stats.totalOrders >= 3) {
+                return "Client régulier";
+            }
+            return "Occasionnel";
+        }
+
+        function getSegmentAdvice(label) {
+            switch (label) {
+                case "Étudiant budget serré":
+                    return "Proposer des formats plus petits et des prix attractifs en semaine.";
+                case "Famille fidèle":
+                    return "Mettre en avant des paniers familiaux et des abonnements hebdomadaires.";
+                case "Chasseur d’anti-gaspi":
+                    return "Communiquer sur les offres de dernière minute et les paniers surprise.";
+                case "Gourmet terroir":
+                    return "Valoriser vos produits premium, l’origine et les partenariats locaux.";
+                case "Client régulier":
+                    return "Proposer des programmes de fidélité ou des avantages récurrents.";
+                default:
+                    return "Encourager la réassurance (qualité, origine, avis clients) pour le faire revenir.";
+            }
+        }
+
+        // Construire une vue par segment
+        const segmentsMap = {}; // label -> { usersCount, avgBasketTotal, avgBasketCount, favCatCount }
+        userIds.forEach(uid => {
+            const stats = statsByUser[uid];
+            const { name, favCat } = getUserInfo(uid, stats);
+            const label = getSegmentLabel(stats, favCat);
+            const avgBasket = stats.totalSpent / stats.totalOrders;
+
+            if (!segmentsMap[label]) {
+                segmentsMap[label] = {
+                    usersCount: 0,
+                    avgBasketTotal: 0,
+                    avgBasketCount: 0,
+                    favCatCount: {},
+                    examples: []
+                };
+            }
+
+            const seg = segmentsMap[label];
+            seg.usersCount += 1;
+            seg.avgBasketTotal += avgBasket;
+            seg.avgBasketCount += 1;
+            if (!seg.favCatCount[favCat]) seg.favCatCount[favCat] = 0;
+            seg.favCatCount[favCat] += 1;
+
+            if (seg.examples.length < 3) {
+                seg.examples.push(name);
+            }
+        });
+
+        const segmentLabels = Object.keys(segmentsMap);
+        if (segmentLabels.length === 0) {
+            container.innerHTML = '<p class="form-note">Pas assez de données pour segmenter vos clients.</p>';
+            return;
+        }
+
+        let html = `
+            <table class="forecast-table">
+                <thead>
+                    <tr>
+                        <th>Segment</th>
+                        <th>Nombre de clients</th>
+                        <th>Panier moyen (approx.)</th>
+                        <th>Catégorie dominante</th>
+                        <th>Exemples de clients</th>
+                        <th>Conseil</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        segmentLabels.forEach(label => {
+            const seg = segmentsMap[label];
+            const avgBasketSegment = seg.avgBasketTotal / seg.avgBasketCount;
+
+            let domCat = "—";
+            let maxCat = 0;
+            Object.entries(seg.favCatCount).forEach(([cat, nb]) => {
+                if (nb > maxCat) {
+                    maxCat = nb;
+                    domCat = cat;
+                }
+            });
+
+            const advice = getSegmentAdvice(label);
+            const examples = seg.examples.join(", ");
+
+            html += `
+                <tr>
+                    <td>${label}</td>
+                    <td>${seg.usersCount}</td>
+                    <td>${avgBasketSegment.toFixed(1)} €</td>
+                    <td>${domCat}</td>
+                    <td>${examples || "—"}</td>
+                    <td>${advice}</td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+    }
+
+/* renderForcast*/
+
+function renderForecasts() {
+const historyContainer = document.getElementById("forecasts-history");
+const nextMonthContainer = document.getElementById("forecasts-next-month");
+if (!historyContainer || !nextMonthContainer) return;
+
+const allProducts = loadProducts();
+const myProducts = allProducts.filter(p => p.producerId === user.id);
+const myProductMap = {};
+myProducts.forEach(p => {
+myProductMap[p.id] = p;
+});
+const myProductIds = Object.keys(myProductMap);
+if (myProductIds.length === 0) {
+historyContainer.innerHTML = '<p class="form-note">Publiez au moins un produit pour obtenir des prévisions.</p>';
+nextMonthContainer.innerHTML = '<p class="form-note">Aucune prévision disponible tant que vous n’avez pas de produit publié.</p>';
+return;
+}
+
+const allOrders = loadOrders();
+if (allOrders.length === 0) {
+historyContainer.innerHTML = '<p class="form-note">Aucune commande passée pour l’instant.</p>';
+nextMonthContainer.innerHTML = '<p class="form-note">Les prévisions apparaîtront dès la première commande.</p>';
+return;
+}
+
+// Agrégation par produit et par mois (YYYY-MM)
+const statsByProductMonth = {}; // { productId: { "2025-11": qty, ... } }
+const monthsSet = new Set();
+
+allOrders.forEach(order => {
+const items = order.items || [];
+const d = new Date(order.date);
+if (isNaN(d)) return;
+const y = d.getFullYear();
+const m = (d.getMonth() + 1).toString().padStart(2, "0");
+const monthKey = `${y}-${m}`;
+monthsSet.add(monthKey);
+
+items.forEach(item => {
+if (!myProductIds.includes(item.id)) return;
+if (!statsByProductMonth[item.id]) {
+statsByProductMonth[item.id] = {};
+}
+if (!statsByProductMonth[item.id][monthKey]) {
+statsByProductMonth[item.id][monthKey] = 0;
+}
+statsByProductMonth[item.id][monthKey] += (item.qty || 1);
+});
+});
+
+const allMonths = Array.from(monthsSet).sort((a, b) => b.localeCompare(a)); // décroissant
+if (allMonths.length === 0) {
+historyContainer.innerHTML = '<p class="form-note">Aucune commande contenant vos produits pour l’instant.</p>';
+nextMonthContainer.innerHTML = '<p class="form-note">Les prévisions seront visibles dès qu’un client aura commandé vos produits.</p>';
+return;
+}
+
+const lastMonths = allMonths.slice(0, 3); // jusqu’à 3 derniers mois
+const currentDate = new Date();
+const currentMonth = currentDate.getMonth() + 1;
+const currentYear = currentDate.getFullYear();
+let nextMonth = currentMonth + 1;
+let nextYear = currentYear;
+if (nextMonth === 13) {
+nextMonth = 1;
+nextYear += 1;
+}
+
+// Construire l’historique : total sur les 3 derniers mois + moyenne
+const historyRows = [];
+const forecastRows = [];
+
+myProductIds.forEach(pid => {
+const prod = myProductMap[pid];
+const perMonth = statsByProductMonth[pid] || {};
+let totalOnPeriod = 0;
+
+lastMonths.forEach(mKey => {
+totalOnPeriod += perMonth[mKey] || 0;
+});
+
+if (totalOnPeriod === 0) {
+// aucun historique récent pour ce produit
+return;
+}
+
+const monthsCount = lastMonths.length;
+const avgPerMonth = totalOnPeriod / monthsCount;
+
+historyRows.push({
+name: prod.name,
+category: prod.category,
+total: totalOnPeriod,
+avg: avgPerMonth
+});
+
+const factor = getSeasonFactor(nextMonth, prod.category);
+const forecast = avgPerMonth * factor;
+
+forecastRows.push({
+name: prod.name,
+category: prod.category,
+avg: avgPerMonth,
+factor,
+forecast
+});
+});
+
+// Rendu de l’historique
+if (historyRows.length === 0) {
+historyContainer.innerHTML = '<p class="form-note">Pas encore assez de recul sur vos produits pour établir un historique (ou bien aucune commande récente).</p>';
+} else {
+let historyHtml = `
+<table class="forecast-table">
+<thead>
+<tr>
+<th>Produit</th>
+<th>Catégorie</th>
+<th>Période analysée</th>
+<th>Quantité totale vendue</th>
+<th>Moyenne / mois</th>
+</tr>
+</thead>
+<tbody>
+`;
+const periodLabel = lastMonths.reverse().join(" à "); // plus ancien -> plus récent
+historyRows.forEach(row => {
+historyHtml += `
+<tr>
+<td>${row.name}</td>
+<td>${row.category}</td>
+<td>${periodLabel}</td>
+<td>${row.total}</td>
+<td>${row.avg.toFixed(1)}</td>
+</tr>
+`;
+});
+historyHtml += `</tbody></table>`;
+historyContainer.innerHTML = historyHtml;
+}
+
+// Rendu des prévisions
+if (forecastRows.length === 0) {
+nextMonthContainer.innerHTML = '<p class="form-note">Pas assez de données pour proposer des prévisions pour le mois prochain.</p>';
+} else {
+const nextMonthLabel = `${nextYear}-${nextMonth.toString().padStart(2, "0")}`;
+let forecastHtml = `
+<table class="forecast-table">
+<thead>
+<tr>
+<th>Produit</th>
+<th>Catégorie</th>
+<th>Moyenne (3 derniers mois)</th>
+<th>Coefficient saisonnier</th>
+<th>Prévision pour ${nextMonthLabel}</th>
+<th>Conseil</th>
+</tr>
+</thead>
+<tbody>
+`;
+forecastRows.forEach(row => {
+let advice = "Stock normal.";
+if (row.factor > 1.2) {
+advice = "Augmenter clairement les stocks (forte saison).";
+} else if (row.factor > 1.05) {
+advice = "Prévoir une légère hausse de la demande.";
+} else if (row.factor < 1.0) {
+advice = "Risque de baisse de ventes : limiter les surplus.";
+}
+
+forecastHtml += `
+<tr>
+<td>${row.name}</td>
+<td>${row.category}</td>
+<td>${row.avg.toFixed(1)}</td>
+<td>${row.factor.toFixed(2)}</td>
+<td>${row.forecast.toFixed(1)}</td>
+<td>${advice}</td>
+</tr>
+`;
+});
+forecastHtml += `</tbody></table>`;
+nextMonthContainer.innerHTML = forecastHtml;
+}
+}
+
+    // --- Affichage des produits du producteur ---
+    function renderMyProducts() {
+        const container = document.getElementById("my-products");
+        const all = loadProducts();
+        const mine = all
+            .filter(p => p.producerId === user.id)
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        container.innerHTML = "";
+
+        if (mine.length === 0) {
+            container.innerHTML = '<p class="form-note">Vous n’avez pas encore publié de produit.</p>';
+            return;
+        }
+
+        mine.forEach(p => {
+            const article = document.createElement("article");
+            article.className = "order-card";
+            const dateStr = new Date(p.createdAt).toLocaleDateString("fr-FR");
+
+            article.innerHTML = `
+                <h3>${p.name}</h3>
+                <p><strong>Prix :</strong> ${p.price.toFixed(2)} €</p>
+                <p><strong>Catégorie :</strong> ${p.category}</p>
+                <p><strong>Origine :</strong> ${p.origin}</p>
+                <p><strong>Région :</strong> ${p.region || "-"}</p>
+                <p><strong>Créé le :</strong> ${dateStr}</p>
+                <button class="remove-product-btn" data-id="${p.id}">Supprimer</button>
+            `;
+
+            container.appendChild(article);
+        });
+
+        // Boutons supprimer avec confirmation
+        container.querySelectorAll(".remove-product-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const confirmation = confirm("Êtes-vous sûr de vouloir supprimer cette publication ?");
+                if (!confirmation) return;
+
+                const id = btn.dataset.id;
+                const all = loadProducts();
+                const filtered = all.filter(prod => !(prod.id === id && prod.producerId === user.id));
+                saveProducts(filtered);
+                renderMyProducts();
+                renderProducerOrders(); // met aussi à jour les commandes liées
+            });
+        });
+    }
+
+    // -- Statut de la commande -- // 
+    function formatStatus(status) {
+    switch (status) {
+        case "en_preparation":
+            return "En préparation";
+        case "prete":
+            return "Prête à retirer";
+        case "terminee":
+            return "Terminée";
+        default:
+            return "En préparation";
+    }
+}
+
+    // --- Affichage des commandes contenant les produits du producteur ---
+   function renderProducerOrders() {
+    const container = document.getElementById("producer-orders");
+    if (!container) return;
+
+    const allProducts = loadProducts();
+    const myProducts = allProducts.filter(p => p.producerId === user.id);
+    const myProductIds = myProducts.map(p => p.id);
+
+    const allOrders = loadOrders();
+
+    const relevantOrders = [];
+
+    allOrders.forEach(order => {
+        const itemsForProducer = (order.items || []).filter(item => myProductIds.includes(item.id));
+        if (itemsForProducer.length > 0) {
+            relevantOrders.push({
+                ...order,
+                itemsForProducer
+            });
+        }
+    });
+
+    container.innerHTML = "";
+
+    if (relevantOrders.length === 0) {
+        container.innerHTML = '<p class="form-note">Vous n’avez pas encore reçu de commande contenant vos produits.</p>';
+        return;
+    }
+
+    relevantOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    relevantOrders.forEach(order => {
+        const dateObj = new Date(order.date);
+        const dateStr = dateObj.toLocaleString("fr-FR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+
+        let linesHtml = "";
+        let totalProducer = 0;
+        let totalQty = 0;
+
+        order.itemsForProducer.forEach(item => {
+            const lineTotal = (item.price * item.qty);
+            totalProducer += lineTotal;
+            totalQty += item.qty;
+
+            linesHtml += `
+                <li>
+                    <strong>${item.name}</strong> – ${item.qty} × ${item.price.toFixed(2)} €
+                    = ${lineTotal.toFixed(2)} €
+                </li>
+            `;
+        });
+
+        const statusValue = order.status || "en_preparation";
+
+        const card = document.createElement("article");
+        card.className = "order-card";
+
+        card.innerHTML = `
+            <h3>Commande du ${dateStr}</h3>
+            <p class="order-status">
+                <strong>Statut :</strong>
+                <select class="order-status-select" data-id="${order.id}">
+                    <option value="en_preparation" ${statusValue === "en_preparation" ? "selected" : ""}>En préparation</option>
+                    <option value="prete" ${statusValue === "prete" ? "selected" : ""}>Prête à retirer</option>
+                    <option value="terminee" ${statusValue === "terminee" ? "selected" : ""}>Terminée</option>
+                </select>
+            </p>
+            <p><strong>Nombre de produits à préparer :</strong> ${totalQty}</p>
+            <ul class="order-items">
+                ${linesHtml}
+            </ul>
+            <p class="order-total">
+                <strong>Total pour vos produits :</strong> ${totalProducer.toFixed(2)} €<br>
+                <span class="form-note">Montant total de la commande client : ${order.total.toFixed(2)} €</span>
+            </p>
+        `;
+
+        container.appendChild(card);
+    });
+
+    // Gestion du changement de statut
+    container.querySelectorAll(".order-status-select").forEach(select => {
+        select.addEventListener("change", () => {
+            const newStatus = select.value;
+            const orderId = select.dataset.id;
+
+            const allOrders = loadOrders();
+            const idx = allOrders.findIndex(o => o.id === orderId);
+            if (idx !== -1) {
+                allOrders[idx].status = newStatus;
+                localStorage.setItem(ORDERS_KEY, JSON.stringify(allOrders));
+            }
+        });
+    });
+}
+
+
+    // --- Gestion du formulaire de publication ---
+    const form = document.getElementById("product-form");
+    const messageEl = document.getElementById("product-message");
+
+   if (form) {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    messageEl.textContent = "";
+    messageEl.className = "form-note auth-message";
+
+    const name = document.getElementById("prod-name").value.trim();
+    const description = document.getElementById("prod-description").value.trim();
+    const price = parseFloat(document.getElementById("prod-price").value);
+    const category = document.getElementById("prod-category").value;
+    const origin = document.getElementById("prod-origin").value.trim();
+    const region = document.getElementById("prod-region").value.trim();
+    const dlc = document.getElementById("prod-dlc").value;
+
+    //  Image depuis l’ordinateur
+    const fileInput = document.getElementById("prod-image");
+    const file = fileInput?.files?.[0] || null;
+
+    if (!name || !description || isNaN(price) || price <= 0 || !origin) {
+      messageEl.textContent = "Merci de remplir tous les champs obligatoires correctement.";
+      messageEl.classList.add("auth-error");
+      return;
+    }
+
+    // Convertit le fichier en base64 (data URL)
+    let imageDataUrl = "";
+    if (file) {
+      const MAX_BYTES = 300 * 1024; // 300 Ko
+      if (file.size > MAX_BYTES) {
+        messageEl.textContent = "Image trop lourde : elle doit faire au maximum 300 Ko.";
+        messageEl.classList.add("auth-error");
+        return;
+      }
+
+      //  sécurité simple (type MIME)
+      const allowed = ["image/png", "image/jpeg", "image/webp"];
+      if (!allowed.includes(file.type)) {
+        messageEl.textContent = "Format image non supporté. Utilisez PNG, JPG/JPEG ou WebP.";
+        messageEl.classList.add("auth-error");
+        return;
+      }
+
+      imageDataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Erreur de lecture du fichier image"));
+        reader.readAsDataURL(file);
+      });
+    } else {
+      // fallback si pas d’image fournie
+      imageDataUrl = "panier-anti-gaspi-famille.png";
+    }
+
+    const all = loadProducts();
+
+    const newProduct = {
+      id: "prod-" + Date.now().toString(),
+      name,
+      description,
+      price,
+      category,
+      origin,
+      region,
+      dlc,
+      image: imageDataUrl,   // base64 OU fallback
+      producerId: user.id,
+      producerName: user.name,
+      createdAt: new Date().toISOString()
+    };
+
+    all.push(newProduct);
+    saveProducts(all);
+
+    messageEl.textContent = "Produit publié. Il sera visible dans le catalogue.";
+    messageEl.classList.add("auth-success");
+    form.reset();
+    renderMyProducts();
+    renderProducerOrders();
+  });
+}
+
+    renderMyProducts();
+    renderProducerOrders();
+    renderForecasts(); 
+    renderSegments();
+});
+</script>
+
+</body>
+</html>

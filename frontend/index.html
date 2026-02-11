@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GreenCart – Consommez local, malin et anti-gaspi</title>
+    <meta name="description" content="GreenCart est une plateforme qui connecte consommateurs et producteurs locaux pour réduire le gaspillage alimentaire grâce à des paniers malins et des produits en circuit court.">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="logo-greencart.png">
+
+</head>
+
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WCPQVNVYLP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WCPQVNVYLP');
+</script>
+
+<script src="cart.js"></script>
+<script src="auth-ui.js"></script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const banner = document.getElementById("cookie-banner");
+  const okBtn = document.getElementById("cookie-ok");
+
+  if (!banner || !okBtn) return;
+
+  // Si déjà accepté, on ne l’affiche pas
+  if (localStorage.getItem("greencart_cookie_ok") === "true") {
+    banner.style.display = "none";
+  }
+
+  okBtn.addEventListener("click", () => {
+    localStorage.setItem("greencart_cookie_ok", "true");
+    banner.style.display = "none";
+  });
+});
+</script>
+
+<body>
+    <!-- Lien d'évitement pour l’accessibilité -->
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <img src="logo-greencart.png" alt="Logo GreenCart" />
+                <span>GreenCart</span>
+            </div>
+            <nav aria-label="Navigation principale">
+               <ul class="nav-list">
+                   <li><a href="index.html#hero">Accueil</a></li>
+                   <li><a href="catalogue.html">Catalogue</a></li>
+                   <li><a href="producteurs.html">Producteurs</a></li>
+                   <li>
+                    <a href="panier.html" class="nav-cart-link">
+                        Panier
+                        <span class="cart-count cart-badge" aria-label="nombre d'articles dans le panier"></span>
+                    </a>
+                </li>
+                   <li><a href="apropos.html">À propos</a></li>
+                   <li id="nav-auth">
+                    <a href="connexion.html" class="btn-outline">Connexion</a>
+                </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main id="main">
+        <!-- HERO -->
+        <section id="hero" class="hero">
+            <div class="container hero-grid">
+                <div class="hero-text">
+                    <h1>Consommez local, malin et anti-gaspi</h1>
+                    <p>
+                        GreenCart connecte les consommateurs et les producteurs locaux
+                        pour sauver des invendus, soutenir l’économie locale et faire des économies.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="catalogue.html" class="btn-primary">Découvrir les paniers</a>
+                        <a href="#producteurs" class="btn-secondary">Je suis producteur</a>
+                    </div>
+                    <p class="hero-note">
+                        Déjà <strong>32 producteurs</strong> partenaires et plus de
+                        <strong>5 200 kg</strong> de produits sauvés.
+                    </p>
+                </div>
+                <div class="hero-image hero-image-box">
+                    <img src="images-page-accueil.jpg"
+                    alt="Panier de produits locaux et anti-gaspi">
+                    <div class="hero-badges">
+                        <span class="hero-tag">Anti-gaspi</span>
+                        <span class="hero-tag">Local</span>
+                        <span class="hero-tag">Économies</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- POURQUOI GREENCART -->
+        <section class="reasons">
+            <div class="container">
+                <h2>Pourquoi choisir GreenCart ?</h2>
+                <div class="reasons-grid">
+                    <article class="reason-card">
+                        <h3>Moins de gaspillage</h3>
+                        <p>
+                            Valorisez les invendus des producteurs locaux grâce à des paniers malins,
+                            prêts à être cuisinés rapidement.
+                        </p>
+                    </article>
+                    <article class="reason-card">
+                        <h3>Produits locaux</h3>
+                        <p>
+                            Fruits, légumes et produits frais provenant de fermes situées à moins de 50 km
+                            de chez vous.
+                        </p>
+                    </article>
+                    <article class="reason-card">
+                        <h3>Économies réelles</h3>
+                        <p>
+                            Des paniers jusqu’à <strong>-40 %</strong> par rapport au prix classique,
+                            sans compromis sur la qualité.
+                        </p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION CLASS -->
+         <section class="seo-block">
+            <div class="container"> 
+                <h2>GreenCart, la plateforme locale et anti-gaspi en France</h2>
+                <p>
+                    GreenCart est une plateforme qui met en relation des consommateurs et
+                    des producteurs locaux en France. L’objectif est simple : favoriser le circuit court,
+                    réduire le gaspillage alimentaire et permettre à chacun d’acheter des produits frais à prix accessibles.
+                </p>
+                <p>
+                    Chaque semaine, nos producteurs partenaires proposent des paniers de fruits, légumes, produits laitiers
+                    ou épicerie issus de la production locale et de saison. Une partie des paniers GreenCart est composée
+                    d’invendus encore parfaitement consommables : une façon concrète de lutter contre l’anti-gaspillage tout
+                    en faisant des économies.
+                </p>
+                <p>
+                    En choisissant GreenCart, vous soutenez l’agriculture de proximité et contribuez à limiter
+                    l’empreinte carbone liée au transport des denrées. Notre solution est pensée pour répondre aux besoins
+                    des familles, des étudiants et des foyers à petit budget, grâce à des paniers malins jusqu’à -40 %.
+                </p>
+                <p>
+                    GreenCart valorise aussi les producteurs régionaux en leur offrant une vitrine digitale simple,
+                    sans qu’ils aient besoin de gérer un site e-commerce. La plateforme facilite la vente des surplus, la mise en avant
+                    des produits labellisés bio ou responsables, et l’accès à une communauté de consommateurs engagés.
+                </p>
+            </div>
+        </section>
+
+        <!-- CATALOGUE EXEMPLE -->
+        <section id="catalogue" class="catalogue">
+            <div class="container">
+                <h2>Quelques paniers disponibles</h2>
+                <p class="section-intro">
+                    Exemple de paniers proposés sur la plateforme. Voir <a href="catalogue.html">catalogue</a>.
+                </p>
+                <div class="catalogue-grid">
+                    <article class="product-card">
+                        <h3>Panier anti-gaspi – Famille</h3>
+                        <p class="product-info">3 à 4 personnes · 6 à 8 kg de fruits & légumes</p>
+                        <p class="product-price">14,90 €</p>
+                        <p class="product-badge">-35 % vs prix normal</p>
+                    </article>
+                    <article class="product-card">
+                        <h3>Panier local – Étudiant</h3>
+                        <p class="product-info">1 à 2 personnes · produits de saison</p>
+                        <p class="product-price">8,90 €</p>
+                        <p class="product-badge">Spécial petits budgets</p>
+                    </article>
+                    <article class="product-card">
+                        <h3>Panier terroir – Week-end</h3>
+                        <p class="product-info">Fromages, œufs, produits fermiers</p>
+                        <p class="product-price">19,90 €</p>
+                        <p class="product-badge">100 % local</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRODUCTEURS -->
+        <section id="producteurs" class="producers">
+            <div class="container producers-grid">
+                <div>
+                    <h2>Producteurs de France</h2>
+                    <p>
+                        GreenCart accompagne les producteurs pour valoriser leurs invendus, simplifier
+                        la mise en ligne de leurs produits et toucher de nouveaux clients locaux.
+                    </p>
+                    <ul class="list-check">
+                        <li>Interface simple pour publier un panier en quelques clics</li>
+                        <li>Tableau de bord de ventes et de stocks</li>
+                        <li>Accompagnement à la prise en main de la plateforme</li>
+                    </ul>
+                    <a href="producteurs.html#producers-contact" class="btn-primary">Devenir producteur partenaire</a>
+                </div>
+                <div class="producers-highlight" aria-hidden="true">
+                    <p><strong>+32</strong> producteurs partenaires</p>
+                    <p><strong>92 %</strong> de satisfaction</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- IMPACT -->
+        <section id="impact" class="impact">
+            <div class="container">
+                <h2>Un impact mesurable</h2>
+                <div class="impact-grid">
+                    <div class="impact-card">
+                        <p class="impact-number">5 200 kg</p>
+                        <p class="impact-label">de produits sauvés</p>
+                    </div>
+                    <div class="impact-card">
+                        <p class="impact-number">32</p>
+                        <p class="impact-label">producteurs accompagnés</p>
+                    </div>
+                    <div class="impact-card">
+                        <p class="impact-number">-18 %</p>
+                        <p class="impact-label">d’empreinte carbone estimée</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NEWSLETTER / CONTACT -->
+        <section id="contact" class="newsletter">
+            <div class="container newsletter-grid">
+                <div>
+                    <h2>Restons en contact</h2>
+                    <p>
+                        Recevez chaque mois les nouveautés, les producteurs mis à l’honneur
+                        et les conseils anti-gaspi directement dans votre boîte mail.
+                    </p>
+                </div>
+                <form class="newsletter-form" aria-label="Inscription à la newsletter GreenCart">
+                    <label for="email-newsletter">Votre adresse e-mail</label>
+                    <input type="email" id="email-newsletter" name="email" placeholder="vous@example.com" required />
+                    <button type="submit" class="btn-primary">Je m’inscris</button>
+                    <p class="form-note">
+                        En vous inscrivant, vous acceptez notre <a href="cgv.html">politique de confidentialité</a>.
+                    </p>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+    <div class="container footer-grid">
+        <div>
+            <p><strong>GreenCart</strong> – Plateforme anti-gaspi & locale (projet pédagogique).</p>
+            <p>© 2026 GreenCart. Tous droits réservés.</p>
+        </div>
+        <div class="footer-links">
+            <a href="accessibilite.html">Accessibilité</a>
+            <a href="cgv.html">CGU – CGV – Politique de confidentialité</a>
+        </div>
+    </div>
+</footer>
+<div class="cookie-banner" id="cookie-banner">
+  <p>
+    Ce site GreenCart est réalisé dans le cadre d’un projet pédagogique. 
+    Des cookies techniques peuvent être utilisés pour améliorer l’expérience. 
+    <a href="cgv.html#cookies">En savoir plus.</a>
+  </p>
+
+  <button id="cookie-ok" class="btn-cookie">OK</button>
+</div>
+</body>
+</html>

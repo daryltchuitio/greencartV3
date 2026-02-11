@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GreenCart – Connexion & inscription</title>
+    <meta name="description" content="Connexion et création de compte GreenCart pour consommateurs et producteurs locaux.">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="logo-greencart.png">
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WCPQVNVYLP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WCPQVNVYLP');
+</script>
+    
+<script src="auth-ui.js"></script>
+
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <img src="logo-greencart.png" alt="Logo GreenCart" />
+                <span>GreenCart</span>
+            </div>
+            <nav aria-label="Navigation principale">
+                <ul class="nav-list">
+                    <li><a href="index.html#hero">Accueil</a></li>
+                    <li><a href="catalogue.html">Catalogue</a></li>
+                    <li><a href="producteurs.html">Producteurs</a></li>
+                    <li><a href="panier.html">Panier</a></li>
+                    <li><a href="apropos.html">À propos</a></li>
+                    <li id="nav-auth">
+                        <a href="connexion.html" class="btn-outline">Connexion</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- fil d’Ariane -->
+     <nav class="breadcrumb" aria-label="Fil d’Ariane">
+        <a href="index.html">Accueil</a>
+        <span aria-hidden="true"> &gt; </span>
+        <span>Connexion</span>
+    </nav>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main id="main">
+        <section class="auth-page">
+            <div class="container auth-grid">
+                <!-- Bloc Connexion -->
+                <section class="auth-card" aria-labelledby="login-title">
+                    <h1 id="login-title">Connexion</h1>
+                    <p class="section-intro">
+                        Accédez à votre espace consommateur ou producteur GreenCart.
+                    </p>
+
+                    <form class="auth-form" id="login-form" aria-label="Formulaire de connexion">
+                        <div class="form-field">
+                            <label for="login-email">Adresse e-mail</label>
+                            <input type="email" id="login-email" name="login-email" placeholder="vous@example.com" required />
+                        </div>
+                        <div class="form-field">
+                            <label for="login-password">Mot de passe</label>
+                            <input type="password" id="login-password" name="login-password" placeholder="Votre mot de passe" required />
+                        </div>
+                        <button type="submit" class="btn-primary">Se connecter</button>
+                        <p id="login-message" class="form-note auth-message"></p>
+                    </form>
+                </section>
+
+                <!-- Bloc Inscription -->
+                <section class="auth-card" aria-labelledby="register-title">
+                    <h2 id="register-title">Créer un compte</h2>
+                    <p class="section-intro">
+                        Créez un compte pour commander des paniers en tant que consommateur
+                        ou vendre vos produits en tant que producteur local.
+                    </p>
+
+                    <form class="auth-form" id="register-form" aria-label="Formulaire d'inscription">
+                        <div class="form-field">
+                            <label for="register-name">Nom complet / Nom de l’exploitation</label>
+                            <input type="text" id="register-name" name="register-name" placeholder="Ex : Jeanne Martin / Ferme des Trois Chênes" required />
+                        </div>
+                        <div class="form-field">
+                            <label for="register-email">Adresse e-mail</label>
+                            <input type="email" id="register-email" name="register-email" placeholder="vous@example.com" required />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label for="register-password">Mot de passe</label>
+                                <input type="password" id="register-password" name="register-password" required />
+                            </div>
+                            <div class="form-field">
+                                <label for="register-password-confirm">Confirmation</label>
+                                <input type="password" id="register-password-confirm" name="register-password-confirm" required />
+                            </div>
+                        </div>
+                        <div class="form-field">
+                            <label for="register-role">Je suis :</label>
+                            <select id="register-role" name="register-role" required>
+                                <option value="consommateur">Consommateur</option>
+                                <option value="producteur">Producteur local</option>
+                            </select>
+                        </div>
+                        <div class="form-field form-checkbox">
+                            <label>
+                                <input type="checkbox" id="accept-cgu" name="accept-cgu" required />
+                                J’accepte les <a href="cgv.html">CGU et la politique de confidentialité</a>.
+                            </label>
+                        </div>
+                        <button type="submit" class="btn-secondary">Créer mon compte</button>
+                        <p id="register-message" class="form-note auth-message"></p>
+                    </form>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="container footer-grid">
+           <div>
+            <p><strong>GreenCart</strong> – Plateforme anti-gaspi & locale (projet pédagogique).</p>
+            <p>© 2026 GreenCart. Tous droits réservés.</p>
+        </div>
+        <div class="footer-links">
+            <a href="accessibilite.html">Accessibilité</a>
+            <a href="cgv.html">CGU – CGV – Politique de confidentialité</a>
+        </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPT AUTH (localStorage) -->
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+    const CURRENT_USER_KEY = "greencart_current_user";
+    const userStr = localStorage.getItem(CURRENT_USER_KEY);
+
+    // Si déjà connecté, on redirige directement
+    if (userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            if (user.role === "producteur") {
+                window.location.href = "dashboard-producteur.html";
+                return;
+            }
+            if (user.role === "consommateur") {
+                window.location.href = "dashboard-consommateur.html";
+                return;
+            }
+        } catch (e) {
+            // si problème de parsing, on ignore et on laisse la page de connexion
+        }
+    }
+});
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const USERS_KEY = "greencart_users";
+        const CURRENT_USER_KEY = "greencart_current_user";
+
+        function loadUsers() {
+            return JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        }
+
+        function setCurrentUser(user) {
+            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+        }
+
+        function redirectByRole(role) {
+            if (role === "producteur") {
+                window.location.href = "dashboard-producteur.html";
+            } else {
+                window.location.href = "dashboard-consommateur.html";
+            }
+        }
+
+        // --- INSCRIPTION ---
+        const registerForm = document.getElementById("register-form");
+        const registerMessage = document.getElementById("register-message");
+
+        if (registerForm) {
+            registerForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                registerMessage.textContent = "";
+                registerMessage.className = "form-note auth-message";
+
+                const name = document.getElementById("register-name").value.trim();
+                const email = document.getElementById("register-email").value.trim().toLowerCase();
+                const password = document.getElementById("register-password").value;
+                const passwordConfirm = document.getElementById("register-password-confirm").value;
+                const role = document.getElementById("register-role").value;
+
+                if (password !== passwordConfirm) {
+                    registerMessage.textContent = "Les mots de passe ne correspondent pas.";
+                    registerMessage.classList.add("auth-error");
+                    return;
+                }
+
+                const users = loadUsers();
+                const exists = users.find(u => u.email === email);
+                if (exists) {
+                    registerMessage.textContent = "Un compte existe déjà avec cette adresse e-mail.";
+                    registerMessage.classList.add("auth-error");
+                    return;
+                }
+
+                const newUser = {
+                    id: Date.now().toString(),
+                    name,
+                    email,
+                    password, 
+                    role
+                };
+
+                users.push(newUser);
+                saveUsers(users);
+
+                registerMessage.textContent = "Compte créé avec succès. Vous pouvez maintenant vous connecter.";
+                registerMessage.classList.add("auth-success");
+                registerForm.reset();
+            });
+        }
+
+        // --- CONNEXION ---
+        const loginForm = document.getElementById("login-form");
+        const loginMessage = document.getElementById("login-message");
+
+        if (loginForm) {
+            loginForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                loginMessage.textContent = "";
+                loginMessage.className = "form-note auth-message";
+
+                const email = document.getElementById("login-email").value.trim().toLowerCase();
+                const password = document.getElementById("login-password").value;
+
+                const users = loadUsers();
+                const user = users.find(u => u.email === email && u.password === password);
+
+                if (!user) {
+                    loginMessage.textContent = "Identifiants incorrects. Vérifiez votre e-mail et votre mot de passe.";
+                    loginMessage.classList.add("auth-error");
+                    return;
+                }
+
+                setCurrentUser({
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role
+                });
+
+                loginMessage.textContent = "Connexion réussie. Redirection...";
+                loginMessage.classList.add("auth-success");
+
+                setTimeout(() => {
+                    redirectByRole(user.role);
+                }, 800);
+            });
+        }
+    });
+    </script>
+</body>
+</html>

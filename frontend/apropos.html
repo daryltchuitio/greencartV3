@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GreenCart – À propos</title>
+    <meta name="description" content="Découvrez la mission, les valeurs et l'équipe derrière GreenCart, une plateforme locale et anti-gaspi imaginée dans le cadre d'un projet pédagogique.">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="logo-greencart.png">
+
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WCPQVNVYLP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WCPQVNVYLP');
+</script>
+    
+<script src="cart.js"></script>
+<script src="auth-ui.js"></script>
+
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <!-- HEADER -->
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <img src="logo-greencart.png" alt="Logo GreenCart" />
+                <span>GreenCart</span>
+            </div>
+            <nav aria-label="Navigation principale">
+                <ul class="nav-list">
+                    <li><a href="index.html#hero">Accueil</a></li>
+                    <li><a href="catalogue.html">Catalogue</a></li>
+                    <li><a href="producteurs.html">Producteurs</a></li>
+                    <li>
+                        <a href="panier.html" class="nav-cart-link">
+                            Panier
+                            <span class="cart-count cart-badge" aria-label="nombre d'articles dans le panier"></span>
+                        </a>
+                    </li>
+                    <li><a href="apropos.html">À propos</a></li>
+                    <li id="nav-auth">
+                        <a href="connexion.html" class="btn-outline">Connexion</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main id="main">
+        <section class="about-page">
+            <div class="container">
+                <h1>À propos de GreenCart</h1>
+                <p class="section-intro">
+                    GreenCart est une plateforme imaginée dans le cadre d’un projet pédagogique pour
+                    connecter les producteurs locaux et les consommateurs de France,
+                    tout en luttant contre le gaspillage alimentaire.
+                </p>
+
+                <h2>Notre mission</h2>
+                <p>
+                    La mission de GreenCart est de rendre plus simple et plus accessible la consommation
+                    de produits locaux, de saison et issus des invendus, afin de :
+                </p>
+                <ul>
+                    <li>réduire le gaspillage alimentaire sur le territoire ;</li>
+                    <li>soutenir les producteurs Français;</li>
+                    <li>proposer des paniers à prix accessibles pour les foyers et les étudiants.</li>
+                </ul>
+
+                <h2>Nos valeurs</h2>
+                <div class="about-values">
+                    <article class="about-card">
+                        <h3>Local</h3>
+                        <p>
+                            Favoriser les circuits courts et les producteurs situés à proximité
+                            de chez vous.
+                        </p>
+                    </article>
+                    <article class="about-card">
+                        <h3>Anti-gaspi</h3>
+                        <p>
+                            Donner une seconde chance aux invendus encore parfaitement consommables
+                            en les intégrant dans des paniers malins.
+                        </p>
+                    </article>
+                    <article class="about-card">
+                        <h3>Accessible</h3>
+                        <p>
+                            Proposer des offres adaptées à différents profils : familles, étudiants,
+                            foyers modestes…
+                        </p>
+                    </article>
+                </div>
+
+                <h2>Le projet pédagogique</h2>
+                <p>
+                    Ce site a été réalisé dans le cadre du projet <strong>Mission Possible – IAS B3</strong>.
+                    Il s’agit d’une maquette fonctionnelle visant à :
+                </p>
+                <ul>
+                    <li>illustrer une démarche complète de gestion de projet digital ;</li>
+                    <li>mettre en œuvre des bonnes pratiques de conception web, de SEO, d’accessibilité et de légalité ;</li>
+                    <li>simuler le fonctionnement d’une marketplace locale.</li>
+                </ul>
+
+                <h2>L’équipe projet</h2>
+                <p>
+                    Le projet GreenCart a été porté par une équipe pluridisciplinaire (chef de projet,
+                    développeur, designer, responsable communication). Dans le cadre de ce projet,
+                    la présente version du site a été réalisée et coordonnée par :
+                </p>
+                <p><strong>Daryl Stalone TCHUITIO SEUNANG</strong></p>
+
+                <h2>Et la suite ?</h2>
+                <p>
+                    Dans une version future, GreenCart pourrait devenir une plateforme réellement opérationnelle,
+                    en y intégrant :
+                </p>
+                <ul>
+                    <li>un back-office plus performant et précis pour les producteurs (gestion des paniers, stocks, ventes) ;</li>
+                    <li>un système de compte très sécurisé pour les consommateurs ;</li>
+                    <li>un tableau de bord d’impact plus performant et précis (kg de produits sauvés, émissions évitées, etc.).</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <p><strong>GreenCart</strong> – Plateforme anti-gaspi & locale (projet pédagogique).</p>
+                <p>© 2026 GreenCart. Tous droits réservés.</p>
+            </div>
+            <div class="footer-links">
+                <a href="accessibilite.html">Accessibilité</a>
+                <a href="cgv.html">CGU – CGV – Politique de confidentialité</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

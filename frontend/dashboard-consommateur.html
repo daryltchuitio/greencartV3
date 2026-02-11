@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GreenCart – Espace consommateur</title>
+    <meta name="description" content="Espace personnel des consommateurs sur GreenCart : suivez vos commandes, consultez votre impact et gérez votre compte en toute simplicité.">
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/png" href="logo-greencart.png">
+</head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WCPQVNVYLP"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WCPQVNVYLP');
+</script>
+    
+<script src="auth-ui.js"></script>
+
+<body>
+    <a class="skip-link" href="#main">Aller au contenu principal</a>
+
+    <header class="site-header">
+        <div class="container header-content">
+            <div class="logo">
+                <img src="logo-greencart.png" alt="Logo GreenCart" />
+                <span>GreenCart</span>
+            </div>
+            <nav aria-label="Navigation principale">
+                <ul class="nav-list">
+                    <li><a href="index.html#hero">Accueil</a></li>
+                    <li><a href="catalogue.html">Catalogue</a></li>
+                    <li><a href="producteurs.html">Producteurs</a></li>
+                    <li><a href="panier.html">Panier</a></li>
+                    <li><a href="apropos.html">À propos</a></li>
+                    <li><button id="logout-btn" class="btn-outline">Déconnexion</button></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="main">
+        <section class="dashboard-page">
+            <div class="container">
+                <h1>Espace consommateur</h1>
+                <p id="user-welcome" class="section-intro"></p>
+
+                <div class="dashboard-grid">
+                    <article class="about-card">
+                        <h2>Mes commandes</h2>
+                        <p>Dans la version complète, vous retrouverez ici le suivi de vos commandes.</p>
+                        <a href="panier.html" class="btn-secondary">Voir mon panier</a>
+                    </article>
+
+                    <article class="about-card">
+                        <h2>Mon impact</h2>
+                        <p>Ces indicateurs sont estimés à partir de vos commandes GreenCart (valeurs pédagogiques).</p>
+                        <ul class="impact-list">
+                            <li><strong>Nombre de commandes :</strong> <span id="impact-orders">0</span></li>
+                            <li><strong>Dépenses totales :</strong> <span id="impact-total">0,00 €</span></li>
+                            <li><strong>Économies estimées :</strong> <span id="impact-savings">0,00 €</span></li>
+                            <li><strong>Kg de produits sauvés :</strong> <span id="impact-kg">0 kg</span></li>
+                            <li><strong>CO₂ évité :</strong> <span id="impact-co2">0 kg CO₂</span></li>
+                        </ul>
+                    </article>
+
+                </div>
+                <h2>Historique de mes commandes</h2>
+                <div id="orders-list" class="orders-list">
+                    <p class="form-note">Vous n’avez pas encore passé de commande.</p>
+
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+           <div>
+            <p><strong>GreenCart</strong> – Plateforme anti-gaspi & locale (projet pédagogique).</p>
+            <p>© 2026 GreenCart. Tous droits réservés.</p>
+        </div>
+        <div class="footer-links">
+            <a href="accessibilite.html">Accessibilité</a>
+            <a href="cgv.html">CGU – CGV – Politique de confidentialité</a>
+        </div>
+        </div>
+    </footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const CURRENT_USER_KEY = "greencart_current_user";
+    const ORDERS_KEY = "greencart_orders";
+    const REVIEWS_KEY = "greencart_reviews";
+
+    function loadReviews() {
+        return JSON.parse(localStorage.getItem(REVIEWS_KEY) || "[]");
+    }
+
+    function saveReviews(reviews) {
+        localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+    }
+
+    function formatStatus(status) {
+        switch (status) {
+            case "en_preparation":
+                return "En préparation";
+            case "prete":
+                return "Prête à retirer";
+            case "terminee":
+                return "Terminée";
+            default:
+                return "En préparation";
+        }
+    }
+
+    const userStr = localStorage.getItem(CURRENT_USER_KEY);
+    if (!userStr) {
+        window.location.href = "connexion.html";
+        return;
+    }
+
+    const user = JSON.parse(userStr);
+
+    if (user.role !== "consommateur") {
+        window.location.href = "connexion.html";
+        return;
+    }
+
+    const welcome = document.getElementById("user-welcome");
+    welcome.textContent = "Bonjour " + user.name + ", bienvenue dans votre espace consommateur.";
+
+    const logoutBtn = document.getElementById("logout-btn");
+    logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem(CURRENT_USER_KEY);
+        window.location.href = "connexion.html";
+    });
+
+    // --- Historique de commandes ---
+    const ordersListDiv = document.getElementById("orders-list");
+    const allOrders = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
+    const allReviews = loadReviews().filter(r => r.userId === user.id);
+
+    const userOrders = allOrders
+        .filter(o => o.userId === user.id)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    ordersListDiv.innerHTML = "";
+
+    // --- Impact : calculs ---
+    const impactOrdersEl = document.getElementById("impact-orders");
+    const impactTotalEl = document.getElementById("impact-total");
+    const impactSavingsEl = document.getElementById("impact-savings");
+    const impactKgEl = document.getElementById("impact-kg");
+    const impactCo2El = document.getElementById("impact-co2");
+
+    const nbOrders = userOrders.length;
+    const totalSpent = userOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const estimatedSavings = totalSpent * 0.30;
+
+    let totalItems = 0;
+    userOrders.forEach(o => {
+        (o.items || []).forEach(item => {
+            totalItems += (item.qty || 1);
+        });
+    });
+    const kgSaved = totalItems * 2;
+    const co2Saved = kgSaved * 0.5;
+
+    if (impactOrdersEl) impactOrdersEl.textContent = nbOrders;
+    if (impactTotalEl) impactTotalEl.textContent = totalSpent.toFixed(2) + " €";
+    if (impactSavingsEl) impactSavingsEl.textContent = estimatedSavings.toFixed(2) + " €";
+    if (impactKgEl) impactKgEl.textContent = kgSaved.toFixed(1) + " kg";
+    if (impactCo2El) impactCo2El.textContent = co2Saved.toFixed(1) + " kg CO₂";
+
+    // --- Affichage des commandes ---
+    if (userOrders.length === 0) {
+        ordersListDiv.innerHTML = '<p class="form-note">Vous n’avez pas encore passé de commande.</p>';
+        return;
+    }
+
+    userOrders.forEach(order => {
+        const dateObj = new Date(order.date);
+        const dateStr = dateObj.toLocaleString("fr-FR", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+
+        const wrapper = document.createElement("article");
+        wrapper.className = "order-card";
+
+        let itemsHtml = "";
+
+        (order.items || []).forEach(item => {
+            const itemTotal = (item.price * item.qty).toFixed(2);
+
+            const existingReview = allReviews.find(r =>
+                r.orderId === order.id && r.productId === item.id
+            );
+
+            let reviewHtml = "";
+
+            if (existingReview) {
+                const stars = "★".repeat(existingReview.rating) + "☆".repeat(5 - existingReview.rating);
+                reviewHtml = `
+                    <div class="review-info">
+                        <p><strong>Votre avis :</strong> <span class="review-stars">${stars}</span></p>
+                        ${existingReview.comment ? `<p class="review-comment">${existingReview.comment}</p>` : ""}
+                    </div>
+                `;
+            } else {
+                reviewHtml = `
+                    <button 
+                        type="button" 
+                        class="btn-secondary small btn-review"
+                        data-order-id="${order.id}"
+                        data-product-id="${item.id}"
+                        data-product-name="${item.name}">
+                        Donner un avis
+                    </button>
+                `;
+            }
+
+            itemsHtml += `
+                <li>
+                    <div class="order-item-main">
+                        <span><strong>${item.name}</strong> – ${item.qty} × ${item.price.toFixed(2)} € = ${itemTotal} €</span>
+                    </div>
+                    ${reviewHtml}
+                </li>
+            `;
+        });
+
+        wrapper.innerHTML = `
+            <h3>Commande du ${dateStr}</h3>
+            <p class="order-status">
+                <strong>Statut :</strong> ${formatStatus(order.status)}
+            </p>
+            <ul class="order-items">
+                ${itemsHtml}
+            </ul>
+            <p class="order-total">
+                Sous-total : ${order.subtotal.toFixed(2)} €<br>
+                Frais de service : ${order.fees.toFixed(2)} €<br>
+                <strong>Total : ${order.total.toFixed(2)} €</strong>
+            </p>
+        `;
+
+        ordersListDiv.appendChild(wrapper);
+    });
+
+    // --- Gestion des clics sur "Donner un avis" ---
+    ordersListDiv.addEventListener("click", (e) => {
+        const btn = e.target.closest(".btn-review");
+        if (!btn) return;
+
+        const orderId = btn.dataset.orderId;
+        const productId = btn.dataset.productId;
+        const productName = btn.dataset.productName;
+
+        let ratingStr = prompt(`Note pour "${productName}" (1 à 5) :`);
+        if (ratingStr === null) return; // annuler
+
+        const rating = parseInt(ratingStr, 10);
+        if (isNaN(rating) || rating < 1 || rating > 5) {
+            alert("Merci de saisir une note entre 1 et 5.");
+            return;
+        }
+
+        const comment = prompt("Votre commentaire (optionnel) :") || "";
+
+        const reviews = loadReviews();
+
+        const exists = reviews.find(r =>
+            r.userId === user.id && r.orderId === orderId && r.productId === productId
+        );
+        if (exists) {
+            alert("Vous avez déjà donné un avis pour ce produit dans cette commande.");
+            return;
+        }
+
+        const newReview = {
+        id: "rev-" + Date.now().toString(),
+        userId: user.id,
+        userName: user.name, 
+        productId,
+        productName,
+        orderId,
+        rating,
+        comment,
+        date: new Date().toISOString()
+        };
+
+
+        reviews.push(newReview);
+        saveReviews(reviews);
+
+        alert("Merci pour votre avis !");
+        location.reload();
+    });
+});
+</script>
+
+</body>
+</html>
