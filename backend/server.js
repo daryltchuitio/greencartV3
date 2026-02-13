@@ -1,3 +1,5 @@
+const Review = require("./models/Review");
+const Order = require("./models/Order");
 const Product = require("./models/Product");
 const auth = require("./middleware/auth");
 const jwt = require("jsonwebtoken");
@@ -146,6 +148,201 @@ app.get("/api/products", async (req, res) => {
 //  Route debug pour vérifier le contenu du token
 app.get("/api/debug-token", auth, (req, res) => {
   res.json(req.user);
+});
+
+// Créer une commande (Consumer uniquement)
+app.post("/api/orders", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "consumer") {
+      return res.status(403).json({ message: "Seuls les consommateurs peuvent créer une commande." });
+    }
+
+    const { items } = req.body; // attendu: [{ productId, qty }]
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: "items est requis." });
+    }
+
+    // Charger les produits en base pour calculer prix + snapshot
+    const productIds = items.map(i => i.productId);
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    if (products.length !== productIds.length) {
+      return res.status(400).json({ message: "Un ou plusieurs produits sont introuvables." });
+    }
+
+    // Construire items snapshot
+    const orderItems = items.map(i => {
+      const p = products.find(pp => pp._id.toString() === i.productId);
+      const qty = Number(i.qty || 1);
+      return {
+        product: p._id,
+        name: p.name,
+        price: p.price,
+        qty
+      };
+    });
+
+    const subtotal = orderItems.reduce((s, it) => s + it.price * it.qty, 0);
+    const fees = orderItems.length > 0 ? 2.0 : 0.0;
+    const total = subtotal + fees;
+
+    const order = await Order.create({
+      user: req.user.userId,
+      items: orderItems,
+      subtotal,
+      fees,
+      total,
+      status: "en_preparation"
+    });
+
+    res.status(201).json(order);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
+  }
+});
+
+// Mes commandes (Consumer) 
+app.get("/api/orders/me", auth, async (req, res) => {
+  try {
+    const orders = await Order.find({ user: req.user.userId })
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// Commande reçues (Producer)
+app.get("/api/producer/orders", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "producer" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    // On récupère les produits de ce producteur
+    const myProducts = await Product.find({ producer: req.user.userId }).select("_id");
+    const myProductIds = myProducts.map(p => p._id.toString());
+
+    // On récupère les commandes qui contiennent au moins un de ces produits
+    const orders = await Order.find({ "items.product": { $in: myProductIds } })
+      .sort({ createdAt: -1 })
+      .populate("user", "name email");
+
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
+  }
+});
+
+// Mettre à jour le statut d'une commande (Producer)
+app.patch("/api/orders/:id/status", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "producer" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const { status } = req.body;
+    if (!["en_preparation", "prete", "terminee"].includes(status)) {
+      return res.status(400).json({ message: "Statut invalide" });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Commande introuvable" });
+
+    // Vérifier que cette commande contient au moins un produit du producteur
+    const myProducts = await Product.find({ producer: req.user.userId }).select("_id");
+    const mySet = new Set(myProducts.map(p => p._id.toString()));
+
+    const hasMyItem = (order.items || []).some(it => mySet.has(it.product.toString()));
+    if (!hasMyItem && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Vous ne pouvez pas modifier cette commande." });
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.json(order);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
+  }
+});
+
+// Ajouter un avis à un produit; POST /api/reviews (consumer, produit livré uniquement)
+app.post("/api/reviews", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "consumer") {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const { productId, rating, comment } = req.body;
+    if (!productId || !rating) {
+      return res.status(400).json({ message: "productId et rating sont requis" });
+    }
+
+    // règle: le user doit avoir AU MOINS une commande "terminee" contenant ce produit
+    const hasDeliveredOrder = await Order.exists({
+      user: req.user.userId,
+      status: "terminee",
+      "items.product": productId
+    });
+
+    if (!hasDeliveredOrder) {
+      return res.status(403).json({
+        message: "Vous pouvez laisser un avis uniquement après livraison (commande terminée)."
+      });
+    }
+
+    const review = await Review.create({
+      product: productId,
+      user: req.user.userId,
+      rating,
+      comment: comment || ""
+    });
+
+    res.status(201).json(review);
+  } catch (err) {
+    // si avis déjà existant (index unique)
+    if (err.code === 11000) {
+      return res.status(409).json({ message: "Vous avez déjà laissé un avis pour ce produit." });
+    }
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
+  }
+});
+
+// GET /api/products/:id/reviews (public)
+app.get("/api/products/:id/reviews", async (req, res) => {
+  try {
+    const reviews = await Review.find({ product: req.params.id })
+      .sort({ createdAt: -1 })
+      .populate("user", "name");
+
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// DELETE /api/reviews/:id (consumer, supprimer son avis)
+app.delete("/api/reviews/:id", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "consumer") {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ message: "Avis introuvable" });
+
+    // seul l'auteur (ou admin plus tard)
+    if (review.user.toString() !== req.user.userId) {
+      return res.status(403).json({ message: "Vous ne pouvez supprimer que votre avis." });
+    }
+
+    await review.deleteOne();
+    res.json({ message: "Avis supprimé" });
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur" });
+  }
 });
 
 
