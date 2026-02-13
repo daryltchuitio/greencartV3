@@ -1,3 +1,5 @@
+const Product = require("./models/Product");
+const auth = require("./middleware/auth");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const mongoose = require("mongoose");
@@ -56,8 +58,8 @@ app.post("/api/register", async (req, res) => {
 });
 
 // LOGIN avec JWT
-console.log("➡️ /api/login appelé");
 app.post("/api/login", async (req, res) => {
+  console.log("➡️ /api/login appelé");
   try {
     const { email, password } = req.body;
 
@@ -80,7 +82,7 @@ app.post("/api/login", async (req, res) => {
 
     // générer token
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -99,6 +101,53 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ message: "Erreur serveur" });
   }
 });
+
+// Route protégée : infos utilisateur connecté
+app.get("/api/me", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("-passwordHash");
+    if (!user) return res.status(404).json({ message: "Utilisateur introuvable" });
+
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// Route POST /api/products (protégée)
+app.post("/api/products", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "producer" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const product = await Product.create({
+      ...req.body,
+      producer: req.user.userId
+    });
+
+    res.status(201).json(product);
+
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+// Route GET /api/products (public)
+app.get("/api/products", async (req, res) => {
+  try {
+    const products = await Product.find().populate("producer", "name");
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+});
+
+//  Route debug pour vérifier le contenu du token
+app.get("/api/debug-token", auth, (req, res) => {
+  res.json(req.user);
+});
+
 
 // Config + connexion
 const PORT = process.env.PORT || 4000;
