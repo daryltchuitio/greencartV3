@@ -276,13 +276,22 @@
                 setToken(data.token);
 
                 // Stocker user (pour UI)
-                setCurrentUser(data.user);
+                // mapping backend -> front (FR) pour compatibilité dashboards actuels
+                const roleFR = data.user.role === "producer" ? "producteur" : "consommateur";
+                setCurrentUser({
+                    id: data.user.id,
+                    name: data.user.name,
+                    email: data.user.email,
+                    role: roleFR
+                });
 
                 loginMessage.textContent = "Connexion réussie. Redirection...";
                 loginMessage.classList.add("auth-success");
 
+                // redirection basée sur le rôle FR (compatible)
                 setTimeout(() => {
-                    redirectByRole(data.user.role);
+                    if (roleFR === "producteur") window.location.href = "dashboard-producteur.html";
+                    else window.location.href = "dashboard-consommateur.html";
                 }, 800);
 
             } catch (err) {
