@@ -1,3 +1,4 @@
+const cors = require("cors");
 const Review = require("./models/Review");
 const Order = require("./models/Order");
 const Product = require("./models/Product");
@@ -11,6 +12,13 @@ require("dotenv").config();
 const User = require("./models/User");
 
 const app = express();
+
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 
 // Routes de test
@@ -138,12 +146,44 @@ app.post("/api/products", auth, async (req, res) => {
 // Route GET /api/products (public)
 app.get("/api/products", async (req, res) => {
   try {
-    const products = await Product.find().populate("producer", "name");
-    res.json(products);
+    // produits + nom du producteur
+    const products = await Product.find().populate("producer", "name").lean();
+
+    const productIds = products.map((p) => p._id);
+
+    // stats reviews groupées par produit
+    const stats = await Review.aggregate([
+      { $match: { product: { $in: productIds } } },
+      {
+        $group: {
+          _id: "$product",
+          avgRating: { $avg: "$rating" },
+          reviewsCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const statsMap = new Map(
+      stats.map((s) => [
+        s._id.toString(),
+        {
+          avgRating: Math.round(s.avgRating * 100) / 100,
+          reviewsCount: s.reviewsCount,
+        },
+      ])
+    );
+
+    const result = products.map((p) => {
+      const s = statsMap.get(p._id.toString()) || { avgRating: 0, reviewsCount: 0 };
+      return { ...p, ...s };
+    });
+    
+    res.json(result);
   } catch (err) {
-    res.status(500).json({ message: "Erreur serveur" });
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 });
+
 
 //  Route debug pour vérifier le contenu du token
 app.get("/api/debug-token", auth, (req, res) => {
@@ -274,11 +314,14 @@ app.post("/api/reviews", auth, async (req, res) => {
     if (req.user.role !== "consumer") {
       return res.status(403).json({ message: "Accès refusé" });
     }
-
+    
     const { productId, rating, comment } = req.body;
-    if (!productId || !rating) {
-      return res.status(400).json({ message: "productId et rating sont requis" });
+    
+    const ratingNum = parseFloat(rating);
+    if (!productId || !Number.isFinite(ratingNum)) {
+      return res.status(400).json({ message: "productId et rating (nombre) sont requis" });
     }
+
 
     // règle: le user doit avoir AU MOINS une commande "terminee" contenant ce produit
     const hasDeliveredOrder = await Order.exists({
@@ -296,7 +339,7 @@ app.post("/api/reviews", auth, async (req, res) => {
     const review = await Review.create({
       product: productId,
       user: req.user.userId,
-      rating,
+      rating: ratingNum,
       comment: comment || ""
     });
 

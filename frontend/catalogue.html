@@ -234,6 +234,21 @@
     </footer>
 
 <script>
+
+// API pour cathaloque
+const API_BASE = "http://localhost:4000";
+async function apiGetProducts() {
+  const res = await fetch(`${API_BASE}/api/products`);
+  if (!res.ok) throw new Error("Erreur API /api/products");
+  return await res.json();
+}
+
+async function apiGetProductReviews(productId) {
+  const res = await fetch(`${API_BASE}/api/products/${productId}/reviews`);
+  if (!res.ok) throw new Error("Erreur API /reviews");
+  return await res.json();
+}
+// Fin API
 document.addEventListener("DOMContentLoaded", () => {
 
   const filterCategory = document.getElementById('filter-category');
@@ -245,54 +260,58 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalContent = document.getElementById("reviews-modal-content");
   const modalTitle = document.getElementById("reviews-modal-title");
 
-    function openReviewsModal(productId) {
-    if (!modal || !modalContent) return;
+  // Modif pour lire les avis d’un produit via l’API
+async function openReviewsModal(productId) {
+  if (!modal || !modalContent) return;
 
-    let reviews;
-    try {
-      reviews = JSON.parse(localStorage.getItem(REVIEWS_KEY) || "[]");
-    } catch {
-      reviews = [];
-    }
-    const filtered = reviews.filter(r => r.productId === productId);
+  modalContent.innerHTML = `<p class="form-note">Chargement des avis...</p>`;
+
+  try {
+    const reviews = await apiGetProductReviews(productId);
 
     modalContent.innerHTML = "";
-
-    if (filtered.length === 0) {
+    if (!Array.isArray(reviews) || reviews.length === 0) {
       modalContent.innerHTML = `<p class="form-note">Aucun avis pour ce produit pour le moment.</p>`;
     } else {
-      filtered
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .forEach(r => {
-          const card = document.createElement("article");
-          card.className = "review-card";
+      reviews.forEach(r => {
+        const card = document.createElement("article");
+        card.className = "review-card";
 
-          const d = new Date(r.date);
-          const dateStr = d.toLocaleString("fr-FR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit"
-          });
-
-          const stars = "★".repeat(r.rating) + "☆".repeat(5 - r.rating);
-          const author = r.userName || "Client GreenCart";
-
-          card.innerHTML = `
-            <p class="review-header">
-              <strong>${author}</strong> – <span class="review-date">${dateStr}</span>
-            </p>
-            <p class="review-stars">${stars}</p>
-            ${r.comment ? `<p class="review-comment">${r.comment}</p>` : ""}
-          `;
-          modalContent.appendChild(card);
+        const d = new Date(r.createdAt || Date.now());
+        const dateStr = d.toLocaleString("fr-FR", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
         });
+
+        const rating = typeof r.rating === "number" ? r.rating : 0;
+        const rounded = Math.round(rating);
+        const stars = "★".repeat(rounded) + "☆".repeat(5 - rounded);
+        const author = r.user?.name || "Client GreenCart";
+
+        card.innerHTML = `
+          <p class="review-header">
+            <strong>${author}</strong> – <span class="review-date">${dateStr}</span>
+          </p>
+          <p class="review-stars">${stars} <span class="review-score">(${rating.toFixed(1)}/5)</span></p>
+          ${r.comment ? `<p class="review-comment">${r.comment}</p>` : ""}
+        `;
+        modalContent.appendChild(card);
+      });
     }
 
     modal.setAttribute("aria-hidden", "false");
     modal.classList.add("open");
+  } catch (err) {
+    console.error(err);
+    modalContent.innerHTML = `<p class="form-note">Impossible de charger les avis.</p>`;
+    modal.setAttribute("aria-hidden", "false");
+    modal.classList.add("open");
   }
+}
+
 
   function closeReviewsModal() {
     if (!modal) return;
@@ -325,7 +344,67 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // -------------------------
+  // affichage des produits API (et leurs notes) dans la grille
+  async function loadApiProducts() {
+  if (!listEl) return;
+
+  try {
+    const products = await apiGetProducts();
+    if (!Array.isArray(products)) return;
+
+    products.forEach(p => {
+      const article = document.createElement("article");
+      article.className = "product-card";
+
+      // IMPORTANT: on utilise l'id Mongo
+      article.dataset.id = p._id;
+      article.dataset.name = p.name;
+      article.dataset.price = p.price;
+      article.dataset.category = (p.category || "").toLowerCase(); // pour tes filtres
+      article.dataset.origin = p.origin || "";
+      article.dataset.producer = p.producer?.name || "Producteur local GreenCart";
+      article.dataset.description = p.description || "";
+      article.dataset.image = p.image || "panier-anti-gaspi-famille.png";
+      article.dataset.region = p.region || "";
+      article.dataset.dlc = p.dlc || "";
+
+      const avg = Number(p.avgRating || 0);
+      const count = Number(p.reviewsCount || 0);
+      const rounded = Math.round(avg);
+      const stars = "★".repeat(rounded) + "☆".repeat(5 - rounded);
+
+      article.innerHTML = `
+        <img src="${article.dataset.image}" alt="${p.name}" class="product-img">
+        <h2>${p.name}</h2>
+        <p class="product-info">${article.dataset.description}</p>
+        <ul class="product-details">
+          <li><strong>Origine :</strong> ${article.dataset.origin}</li>
+          <li><strong>Producteur :</strong> ${article.dataset.producer}</li>
+          ${article.dataset.region ? `<li><strong>Région :</strong> ${article.dataset.region}</li>` : ""}
+          ${article.dataset.dlc ? `<li><strong>DLC :</strong> ${article.dataset.dlc}</li>` : ""}
+          <li><strong>Catégorie :</strong> ${article.dataset.category}</li>
+        </ul>
+        <p class="product-price">${Number(article.dataset.price).toFixed(2)} €</p>
+
+        <p class="product-rating">
+          <span class="rating-stars">${stars}</span>
+          <button type="button" class="rating-link" data-product-id="${p._id}">
+            ${avg.toFixed(1)}/5 – ${count} avis
+          </button>
+        </p>
+
+        <button class="btn-primary add-to-cart">Ajouter au panier</button>
+      `;
+
+      // On ajoute à la fin de la liste (après tes produits statiques)
+      listEl.appendChild(article);
+    });
+
+  } catch (err) {
+    console.error("Erreur loadApiProducts:", err);
+  }
+}
+
   // Charger les produits créés par les producteurs
   // -------------------------
   function loadProducerProducts() {
@@ -372,7 +451,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  loadProducerProducts();
+  // loadProducerProducts(); (on ne charge plus les produits producteurs depuis le localStorage, car on les gère désormais via l’API backend)
+  loadApiProducts(); // on charge d’abord les produits de l’API (qui incluent les produits producteurs + les produits statiques)
 
     // -------------------------
   // Affichage des notes moyennes
@@ -434,7 +514,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-    renderRatings();
+    // renderRatings(); (API + backend gèrent les notes, donc plus besoin de ce rendu local)
 
   // -------------------------
   // FILTRES

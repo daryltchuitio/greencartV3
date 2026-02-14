@@ -129,6 +129,10 @@
     <script>
         const CART_KEY_LOCAL = "greencart_cart";
 
+        // Ajout de la base API orders
+        const API_BASE = "http://localhost:4000";
+
+
         function getCart() {
             return JSON.parse(localStorage.getItem(CART_KEY_LOCAL) || "[]");
         }
@@ -136,6 +140,12 @@
         function saveCart(cart) {
             localStorage.setItem(CART_KEY_LOCAL, JSON.stringify(cart));
         }
+
+        // Récupérer le token (JWT) depuis le front
+        function getToken() {
+            return localStorage.getItem("greencart_token"); // on va standardiser ce nom
+        }
+
 
         function updateTotals(cart) {
             const subtotal = cart.reduce((s, p) => s + p.price * p.qty, 0);
@@ -221,57 +231,61 @@
             });
         }
 
-        document.getElementById("validate-cart").addEventListener("click", () => {
+        //Modif : Gestion de la validation du panier via API backend
+        document.getElementById("validate-cart").addEventListener("click", async () => {
             const cart = getCart();
             if (cart.length === 0) {
                 alert("Votre panier est vide.");
                 return;
             }
-            const CURRENT_USER_KEY = "greencart_current_user";
-            const userStr = localStorage.getItem(CURRENT_USER_KEY);
-            if (!userStr) {
-                alert("Vous devez être connecté en tant que consommateur pour valider une commande.");
-                window.location.href = "connexion.html";
-                return;
-            }
-            const user = JSON.parse(userStr);
-            if (user.role !== "consommateur") {
-                alert("Seuls les comptes consommateurs peuvent valider des commandes.");
-                return;
-            }
             
-            // Création de la commande
-            const ORDERS_KEY = "greencart_orders";
-            const orders = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
-            const subtotal = cart.reduce((s, p) => s + p.price * p.qty, 0);
-            const fees = cart.length > 0 ? 2.00 : 0.00;
-            const total = subtotal + fees;
-            const newOrder = {
-            id: Date.now().toString(),
-            userId: user.id,
-            date: new Date().toISOString(),
-            items: cart,
-            subtotal,
-            fees,
-            total,
-            status: "en_preparation"  // statut initial
-        };
+        //  JWT obligatoire
+        const token = getToken();
+        if (!token) {
+            alert("Vous devez être connecté pour valider une commande.");
+            window.location.href = "connexion.html";
+            return;
+        }
+        
+        // On envoie au backend uniquement ce qu'il faut : productId + qty
+        // Dans ton panier local, l'id correspond maintenant au _id Mongo (depuis catalogue API)
+        const items = cart.map((p) => ({
+            productId: p.id,
+            qty: p.qty
+        }));
+        
+        try {
+            const res = await fetch(`${API_BASE}/api/orders`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                
+        body: JSON.stringify({ items })
+       });
 
-
-            orders.push(newOrder);
-            localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
-
-            // Vider le panier après commande
-            saveCart([]);
-            updateCartCount();
-            alert("Votre commande a été enregistrée. Vous allez être redirigé vers votre espace consommateur.");
-            window.location.href = "dashboard-consommateur.html";
-        });
-
-        updateCartCount();
-
-        renderCart();
-
+       const data = await res.json().catch(() => ({}));
+       
+       if (!res.ok) {
+        alert(data.message || "Impossible de créer la commande.");
+        return;
+       }
+       
+       // Succès : vider le panier
+       saveCart([]);
+       updateCartCount();
+       alert("Votre commande a été enregistrée. Vous allez être redirigé vers votre espace consommateur.");
+       window.location.href = "dashboard-consommateur.html";
+       } catch (err) {
+       console.error(err);
+       alert("Erreur réseau : impossible de contacter le serveur.");
+    }
+    });
+    updateCartCount();
+    renderCart();
+    
     </script>
+    
 </body>
 </html>

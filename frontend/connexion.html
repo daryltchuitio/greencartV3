@@ -164,115 +164,135 @@
     }
 });
 
+    // Modif pour stocker le token JWT
     document.addEventListener("DOMContentLoaded", () => {
-        const USERS_KEY = "greencart_users";
-        const CURRENT_USER_KEY = "greencart_current_user";
 
-        function loadUsers() {
-            return JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    const API_BASE = "http://localhost:4000";
+    const CURRENT_USER_KEY = "greencart_current_user";
+    const TOKEN_KEY = "greencart_token";
+
+    function setCurrentUser(user) {
+        localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    }
+
+    function setToken(token) {
+        localStorage.setItem(TOKEN_KEY, token);
+    }
+
+    function redirectByRole(role) {
+        if (role === "producer") {
+            window.location.href = "dashboard-producteur.html";
+        } else {
+            window.location.href = "dashboard-consommateur.html";
         }
+    }
 
-        function saveUsers(users) {
-            localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        }
+    // ======================
+    // INSCRIPTION (BACKEND)
+    // ======================
+    const registerForm = document.getElementById("register-form");
+    const registerMessage = document.getElementById("register-message");
 
-        function setCurrentUser(user) {
-            localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-        }
+    if (registerForm) {
+        registerForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            registerMessage.textContent = "";
 
-        function redirectByRole(role) {
-            if (role === "producteur") {
-                window.location.href = "dashboard-producteur.html";
-            } else {
-                window.location.href = "dashboard-consommateur.html";
+            const name = document.getElementById("register-name").value.trim();
+            const email = document.getElementById("register-email").value.trim().toLowerCase();
+            const password = document.getElementById("register-password").value;
+            const passwordConfirm = document.getElementById("register-password-confirm").value;
+            const roleFront = document.getElementById("register-role").value;
+
+            if (password !== passwordConfirm) {
+                registerMessage.textContent = "Les mots de passe ne correspondent pas.";
+                registerMessage.classList.add("auth-error");
+                return;
             }
-        }
 
-        // --- INSCRIPTION ---
-        const registerForm = document.getElementById("register-form");
-        const registerMessage = document.getElementById("register-message");
+            // Mapping FR → backend
+            const role = roleFront === "producteur" ? "producer" : "consumer";
 
-        if (registerForm) {
-            registerForm.addEventListener("submit", (e) => {
-                e.preventDefault();
-                registerMessage.textContent = "";
-                registerMessage.className = "form-note auth-message";
+            try {
+                const res = await fetch(`${API_BASE}/api/register`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ name, email, password, role })
+                });
 
-                const name = document.getElementById("register-name").value.trim();
-                const email = document.getElementById("register-email").value.trim().toLowerCase();
-                const password = document.getElementById("register-password").value;
-                const passwordConfirm = document.getElementById("register-password-confirm").value;
-                const role = document.getElementById("register-role").value;
+                const data = await res.json();
 
-                if (password !== passwordConfirm) {
-                    registerMessage.textContent = "Les mots de passe ne correspondent pas.";
+                if (!res.ok) {
+                    registerMessage.textContent = data.message || "Erreur lors de l'inscription.";
                     registerMessage.classList.add("auth-error");
                     return;
                 }
 
-                const users = loadUsers();
-                const exists = users.find(u => u.email === email);
-                if (exists) {
-                    registerMessage.textContent = "Un compte existe déjà avec cette adresse e-mail.";
-                    registerMessage.classList.add("auth-error");
-                    return;
-                }
-
-                const newUser = {
-                    id: Date.now().toString(),
-                    name,
-                    email,
-                    password, 
-                    role
-                };
-
-                users.push(newUser);
-                saveUsers(users);
-
-                registerMessage.textContent = "Compte créé avec succès. Vous pouvez maintenant vous connecter.";
+                registerMessage.textContent = "Compte créé avec succès. Vous pouvez vous connecter.";
                 registerMessage.classList.add("auth-success");
                 registerForm.reset();
-            });
-        }
 
-        // --- CONNEXION ---
-        const loginForm = document.getElementById("login-form");
-        const loginMessage = document.getElementById("login-message");
+            } catch (err) {
+                registerMessage.textContent = "Erreur serveur.";
+                registerMessage.classList.add("auth-error");
+            }
+        });
+    }
 
-        if (loginForm) {
-            loginForm.addEventListener("submit", (e) => {
-                e.preventDefault();
-                loginMessage.textContent = "";
-                loginMessage.className = "form-note auth-message";
+    // ======================
+    // CONNEXION (BACKEND)
+    // ======================
+    const loginForm = document.getElementById("login-form");
+    const loginMessage = document.getElementById("login-message");
 
-                const email = document.getElementById("login-email").value.trim().toLowerCase();
-                const password = document.getElementById("login-password").value;
+    if (loginForm) {
+        loginForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            loginMessage.textContent = "";
 
-                const users = loadUsers();
-                const user = users.find(u => u.email === email && u.password === password);
+            const email = document.getElementById("login-email").value.trim().toLowerCase();
+            const password = document.getElementById("login-password").value;
 
-                if (!user) {
-                    loginMessage.textContent = "Identifiants incorrects. Vérifiez votre e-mail et votre mot de passe.";
+            try {
+                const res = await fetch(`${API_BASE}/api/login`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    loginMessage.textContent = data.message || "Identifiants incorrects.";
                     loginMessage.classList.add("auth-error");
                     return;
                 }
 
-                setCurrentUser({
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role
-                });
+                // Stocker token
+                setToken(data.token);
+
+                // Stocker user (pour UI)
+                setCurrentUser(data.user);
 
                 loginMessage.textContent = "Connexion réussie. Redirection...";
                 loginMessage.classList.add("auth-success");
 
                 setTimeout(() => {
-                    redirectByRole(user.role);
+                    redirectByRole(data.user.role);
                 }, 800);
-            });
-        }
-    });
+
+            } catch (err) {
+                loginMessage.textContent = "Erreur serveur.";
+                loginMessage.classList.add("auth-error");
+            }
+        });
+    }
+});
+
     </script>
 </body>
 </html>
