@@ -36,7 +36,7 @@ app.get("/health", (req, res) => {
 //  REGISTER sécurisé (hash password)
 app.post("/api/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     // validations simples
     if (!name || !email || !password) {
@@ -56,11 +56,12 @@ app.post("/api/register", async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     // create user
-    const user = await User.create({ name, email, passwordHash });
+    const safeRole = role === "producer" ? "producer" : "consumer";
+    const user = await User.create({ name, email, passwordHash, role: safeRole });
 
     return res.status(201).json({
       message: "Utilisateur créé !",
-      user: { id: user._id, name: user.name, email: user.email }
+      user: { id: user._id, name: user.name, email: user.email, role: user.role}
     });
   } catch (err) {
     return res.status(500).json({ message: "Erreur serveur", error: err.message });
