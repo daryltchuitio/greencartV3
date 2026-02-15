@@ -355,6 +355,51 @@ app.post("/api/reviews", auth, async (req, res) => {
   }
 });
 
+// POST /api/products/:id/reviews (consumer, commande terminée uniquement)
+app.post("/api/products/:id/reviews", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "consumer") {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const productId = req.params.id;
+    const { rating, comment } = req.body;
+
+    const ratingNum = parseFloat(String(rating).replace(",", "."));
+    if (!Number.isFinite(ratingNum) || ratingNum < 1 || ratingNum > 5) {
+      return res.status(400).json({ message: "rating doit être un nombre entre 1 et 5" });
+    }
+
+    // règle: le user doit avoir AU MOINS une commande "terminee" contenant ce produit
+    const hasDeliveredOrder = await Order.exists({
+      user: req.user.userId,
+      status: "terminee",
+      "items.product": productId
+    });
+
+    if (!hasDeliveredOrder) {
+      return res.status(403).json({
+        message: "Vous pouvez laisser un avis uniquement après livraison (commande terminée)."
+      });
+    }
+
+    const review = await Review.create({
+      product: productId,
+      user: req.user.userId,
+      rating: ratingNum,
+      comment: comment || ""
+    });
+
+    res.status(201).json(review);
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({ message: "Vous avez déjà laissé un avis pour ce produit." });
+    }
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
+  }
+});
+
+
 // GET /api/products/:id/reviews (public)
 app.get("/api/products/:id/reviews", async (req, res) => {
   try {

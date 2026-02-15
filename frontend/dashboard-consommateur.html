@@ -135,7 +135,7 @@ async function apiCreateReview(productId, orderId, rating, comment) {
   });
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || "Erreur création avis");
+  if (!res.ok) throw new Error(data.message || `Erreur création avis (${res.status})`);
   return data;
 }
 
@@ -341,7 +341,13 @@ ordersListDiv.addEventListener("click", async (e) => {
         btn.disabled = true;
         btn.textContent = "Avis envoyé";
     } catch (err) {
-        alert(err.message);
+      if (String(err.message).includes("déjà laissé")) {
+        alert("Vous avez déjà laissé un avis pour ce produit.");
+        btn.disabled = true;
+        btn.textContent = "Avis déjà envoyé";
+        return;
+    }
+    alert(err.message);
     }
 });
         
