@@ -93,10 +93,52 @@
     </footer>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+
     const CURRENT_USER_KEY = "greencart_current_user";
     const ORDERS_KEY = "greencart_orders";
     const REVIEWS_KEY = "greencart_reviews";
+
+    const API_BASE = "http://localhost:4000";
+    const TOKEN_KEY = "greencart_token";
+    function getToken() {
+    return localStorage.getItem(TOKEN_KEY);
+    }
+ // --- API reviews ---   
+async function apiGetProductReviews(productId) {
+  const res = await fetch(`${API_BASE}/api/products/${productId}/reviews`);
+  if (!res.ok) throw new Error("Erreur API reviews");
+  return await res.json();
+}
+
+async function apiDeleteMyReview(productId) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/api/products/${productId}/reviews/me`, {
+    method: "DELETE",
+    headers: { "Authorization": `Bearer ${token}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Erreur suppression avis");
+  return data;
+}
+
+async function apiCreateReview(productId, orderId, rating, comment) {
+  const token = getToken();
+
+  const res = await fetch(`${API_BASE}/api/products/${productId}/reviews`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({ orderId, rating, comment })
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Erreur création avis");
+  return data;
+}
+
 
     function loadReviews() {
         return JSON.parse(localStorage.getItem(REVIEWS_KEY) || "[]");
@@ -141,16 +183,36 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "connexion.html";
     });
 
-    // --- Historique de commandes ---
-    const ordersListDiv = document.getElementById("orders-list");
-    const allOrders = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
-    const allReviews = loadReviews().filter(r => r.userId === user.id);
+// --- Historique de commandes (BACKEND) ---
+const ordersListDiv = document.getElementById("orders-list");
+ordersListDiv.innerHTML = '<p class="form-note">Chargement de vos commandes...</p>';
 
-    const userOrders = allOrders
-        .filter(o => o.userId === user.id)
-        .sort((a, b) => new Date(b.date) - new Date(a.date));
+let userOrders = [];
+try {
+  const token = getToken();
+  if (!token) {
+    window.location.href = "connexion.html";
+    return;
+  }
 
-    ordersListDiv.innerHTML = "";
+  const res = await fetch(`${API_BASE}/api/orders/me`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  if (!res.ok) {
+    window.location.href = "connexion.html";
+    return;
+  }
+
+  userOrders = await res.json();
+} catch (err) {
+  console.error("Erreur récupération commandes:", err);
+  ordersListDiv.innerHTML = '<p class="form-note">Impossible de charger vos commandes.</p>';
+  return;
+}
+
+//  Avis: on désactive le localStorage reviews pour l’instant
+const allReviews = [];
 
     // --- Impact : calculs ---
     const impactOrdersEl = document.getElementById("impact-orders");
@@ -185,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     userOrders.forEach(order => {
-        const dateObj = new Date(order.date);
+        const dateObj = new Date(order.createdAt);
         const dateStr = dateObj.toLocaleString("fr-FR", {
             year: "numeric",
             month: "2-digit",
@@ -203,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const itemTotal = (item.price * item.qty).toFixed(2);
 
             const existingReview = allReviews.find(r =>
-                r.orderId === order.id && r.productId === item.id
+                r.orderId === order._id && r.productId === item.product // Modele mongoDB, order.id devient order_.id et pas de .id sur les items, c’est .product qui référence le produit
             );
 
             let reviewHtml = "";
@@ -217,16 +279,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 `;
             } else {
-                reviewHtml = `
-                    <button 
-                        type="button" 
-                        class="btn-secondary small btn-review"
-                        data-order-id="${order.id}"
-                        data-product-id="${item.id}"
-                        data-product-name="${item.name}">
-                        Donner un avis
-                    </button>
-                `;
+                const canReview = order.status === "terminee";
+                reviewHtml = canReview
+                    ? `<button type="button" class="btn-secondary small btn-review" data-product-id="${item.product}" data-order-id="${order._id}">Donner un avis</button>`
+                    : `<span class="badge-disabled">Avis disponible après livraison</span>`;
             }
 
             itemsHtml += `
@@ -257,8 +313,41 @@ document.addEventListener("DOMContentLoaded", () => {
         ordersListDiv.appendChild(wrapper);
     });
 
-    // --- Gestion des clics sur "Donner un avis" ---
-    ordersListDiv.addEventListener("click", (e) => {
+// --- Gestion des clics sur "Donner un avis" (BACKEND)---
+ordersListDiv.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".btn-review");
+    if (!btn) return;
+
+    const productId = btn.dataset.productId;
+    const orderId = btn.dataset.orderId;
+
+
+    // 1) demander la note
+    const ratingStr = prompt("Note (1 à 5, décimales autorisées) :");
+    if (ratingStr === null) return;
+
+    const rating = parseFloat(ratingStr.replace(",", "."));
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+        alert("Note invalide. Mets un nombre entre 1 et 5 (ex: 4.5).");
+        return;
+    }
+
+    // 2) commentaire optionnel
+    const comment = prompt("Commentaire (optionnel) :") || "";
+
+    try {
+        await apiCreateReview(productId, orderId, rating, comment);
+        alert("Avis enregistré ! Merci pour votre retour.");
+        btn.disabled = true;
+        btn.textContent = "Avis envoyé";
+    } catch (err) {
+        alert(err.message);
+    }
+});
+        
+
+    // --- Gestion des clics sur "Donner un avis" (en localStorage, je désactive pour mettre en backend)---
+    /* ordersListDiv.addEventListener("click", (e) => {
         const btn = e.target.closest(".btn-review");
         if (!btn) return;
 
@@ -305,8 +394,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         alert("Merci pour votre avis !");
         location.reload();
+    }); */
+    
     });
-});
 </script>
 
 </body>
