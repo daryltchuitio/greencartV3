@@ -98,9 +98,9 @@
                     <input type="date" id="prod-dlc" />
                 </div>
                 <div class="form-field">
-                    <label for="prod-image">Image du produit (PNG/JPG/WebP – max 300 Ko)</label>
+                    <label for="prod-image">Image du produit (PNG/JPG/WebP – max 2 Mo)</label>
                     <input type="file" id="prod-image" accept="image/png,image/jpeg,image/webp" />
-                    <p class="form-note">Conseil : privilégiez une image légère (ex : JPG), car vous ne pouvez pas deppasser 300Ko.</p>
+                    <p class="form-note">Conseil : privilégiez une image légère (ex : JPG), car vous ne pouvez pas deppasser 2 Mo.</p>
                 </div>
             </div>
 
@@ -683,53 +683,66 @@ nextMonthContainer.innerHTML = forecastHtml;
 }
 
     // --- Affichage des produits du producteur ---
-    function renderMyProducts() {
-        const container = document.getElementById("my-products");
-        const all = loadProducts();
-        const mine = all
-            .filter(p => p.producerId === user.id)
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    async function renderMyProducts() {
+  const container = document.getElementById("my-products");
+  if (!container) return;
 
-        container.innerHTML = "";
+  container.innerHTML = '<p class="form-note">Chargement de vos produits...</p>';
 
-        if (mine.length === 0) {
-            container.innerHTML = '<p class="form-note">Vous n’avez pas encore publié de produit.</p>';
-            return;
-        }
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/api/products/mine`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-        mine.forEach(p => {
-            const article = document.createElement("article");
-            article.className = "order-card";
-            const dateStr = new Date(p.createdAt).toLocaleDateString("fr-FR");
+    const products = await res.json().catch(() => ([]));
+    if (!res.ok) throw new Error(products.message || "Erreur chargement produits");
 
-            article.innerHTML = `
-                <h3>${p.name}</h3>
-                <p><strong>Prix :</strong> ${p.price.toFixed(2)} €</p>
-                <p><strong>Catégorie :</strong> ${p.category}</p>
-                <p><strong>Origine :</strong> ${p.origin}</p>
-                <p><strong>Région :</strong> ${p.region || "-"}</p>
-                <p><strong>Créé le :</strong> ${dateStr}</p>
-                <button class="remove-product-btn" data-id="${p.id}">Supprimer</button>
-            `;
-
-            container.appendChild(article);
-        });
-
-        // Boutons supprimer avec confirmation
-        container.querySelectorAll(".remove-product-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const confirmation = confirm("Êtes-vous sûr de vouloir supprimer cette publication ?");
-                if (!confirmation) return;
-
-                const id = btn.dataset.id;
-                const all = loadProducts();
-                const filtered = all.filter(prod => !(prod.id === id && prod.producerId === user.id));
-                saveProducts(filtered);
-                renderMyProducts();
-                renderProducerOrders(); // met aussi à jour les commandes liées
-            });
-        });
+    if (!Array.isArray(products) || products.length === 0) {
+      container.innerHTML = '<p class="form-note">Vous n’avez pas encore publié de produit.</p>';
+      return;
     }
+
+    container.innerHTML = "";
+
+    products.forEach(p => {
+      const created = p.createdAt ? new Date(p.createdAt).toLocaleDateString("fr-FR") : "";
+      const dlc = p.dlc ? new Date(p.dlc).toLocaleDateString("fr-FR") : "—";
+      const img = p.image || "panier-anti-gaspi-famille.png";
+
+      const card = document.createElement("article");
+      card.className = "product-card";
+      card.innerHTML = `
+        <div class="product-card-top">
+          <img src="${img}" alt="${p.name}" class="product-thumb">
+          <div class="product-meta">
+            <h4>${p.name}</h4>
+            <p class="form-note">${(p.category || "Catégorie").toString()}</p>
+            <p><strong>${Number(p.price).toFixed(2)} €</strong></p>
+          </div>
+        </div>
+
+        <ul class="product-details">
+          <li><strong>Origine :</strong> ${p.origin || "—"}</li>
+          <li><strong>Région :</strong> ${p.region || "—"}</li>
+          <li><strong>DLC :</strong> ${dlc}</li>
+          <li><strong>Publié le :</strong> ${created || "—"}</li>
+        </ul>
+
+        <div class="product-actions">
+            <button class="btn-edit-product" data-id="${p._id}">Modifier</button>
+            <button class="btn-danger btn-delete-product" data-id="${p._id}">Supprimer</button>
+            </div>
+      `;
+
+      container.appendChild(card);
+    });
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<p class="form-note">Erreur : ${err.message}</p>`;
+  }
+}
 
     // -- Statut de la commande -- // 
     function formatStatus(status) {
@@ -865,9 +878,9 @@ nextMonthContainer.innerHTML = forecastHtml;
     // Convertit le fichier en base64 (data URL)
     let imageDataUrl = "";
     if (file) {
-      const MAX_BYTES = 300 * 1024; // 300 Ko
+      const MAX_BYTES = 1024 * 1024 * 2; // 2 Mo
       if (file.size > MAX_BYTES) {
-        messageEl.textContent = "Image trop lourde : elle doit faire au maximum 300 Ko.";
+        messageEl.textContent = "Image trop lourde : elle doit faire au maximum 2 Mo.";
         messageEl.classList.add("auth-error");
         return;
       }
@@ -891,10 +904,20 @@ nextMonthContainer.innerHTML = forecastHtml;
       imageDataUrl = "panier-anti-gaspi-famille.png";
     }
 
-    const all = loadProducts();
+   try {
+  const token = getToken();
+  if (!token) {
+    window.location.href = "connexion.html";
+    return;
+  }
 
-    const newProduct = {
-      id: "prod-" + Date.now().toString(),
+  const res = await fetch(`${API_BASE}/api/products`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify({
       name,
       description,
       price,
@@ -902,14 +925,33 @@ nextMonthContainer.innerHTML = forecastHtml;
       origin,
       region,
       dlc,
-      image: imageDataUrl,   // base64 OU fallback
-      producerId: user.id,
-      producerName: user.name,
-      createdAt: new Date().toISOString()
-    };
+      image: imageDataUrl
+    })
+  });
 
-    all.push(newProduct);
-    saveProducts(all);
+const data = await res.json().catch(() => ({}));
+
+if (!res.ok) {
+  console.error("POST /api/products failed", res.status, data);
+  messageEl.textContent = data.message || data.error || `Erreur publication (${res.status})`;
+  messageEl.classList.add("auth-error");
+  return;
+}
+
+
+  messageEl.textContent = "Produit publié (backend). Il sera visible dans le catalogue.";
+  messageEl.classList.add("auth-success");
+  form.reset();
+
+  // refresh listes
+  await renderMyProducts();        
+  await renderProducerOrders();
+
+} catch (err) {
+  console.error(err);
+  messageEl.textContent = "Erreur réseau / serveur.";
+  messageEl.classList.add("auth-error");
+} 
 
     messageEl.textContent = "Produit publié. Il sera visible dans le catalogue.";
     messageEl.classList.add("auth-success");
@@ -938,6 +980,68 @@ nextMonthContainer.innerHTML = forecastHtml;
 
     renderForecasts(); 
     renderSegments();
+
+// --- Gestion de la suppression d’un produit ---
+    document.getElementById("my-products")?.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".btn-delete-product");
+  if (!btn) return;
+
+  const id = btn.dataset.id;
+  if (!confirm("Supprimer ce produit ?")) return;
+
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/api/products/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `Erreur suppression (${res.status})`);
+
+    await renderMyProducts();
+    await renderProducerOrders(); // pour recalculer correctement les commandes reçues liées aux produits
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+// --- Gestion de la modification d’un produit publié ---
+document.getElementById("my-products")?.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".btn-edit-product");
+  if (!btn) return;
+
+  const id = btn.dataset.id;
+
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/api/products/mine`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    const products = await res.json();
+    const product = products.find(p => p._id === id);
+    if (!product) return;
+
+    // Remplir le formulaire existant
+    document.querySelector("input[name='name']").value = product.name || "";
+    document.querySelector("textarea[name='description']").value = product.description || "";
+    document.querySelector("input[name='price']").value = product.price || "";
+    document.querySelector("input[name='category']").value = product.category || "";
+    document.querySelector("input[name='origin']").value = product.origin || "";
+    document.querySelector("input[name='region']").value = product.region || "";
+    document.querySelector("input[name='dlc']").value = product.dlc ? product.dlc.split("T")[0] : "";
+
+    // On stocke l'id en mode édition
+    form.dataset.editingId = id;
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+  } catch (err) {
+    alert("Erreur chargement produit.");
+  }
+});
+
 });
 </script>
 

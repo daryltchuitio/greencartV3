@@ -19,7 +19,7 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: "2mb" }));
 
 // Routes de test
 app.get("/", (req, res) => {
@@ -139,9 +139,8 @@ app.post("/api/products", auth, async (req, res) => {
     });
 
     res.status(201).json(product);
-
   } catch (err) {
-    res.status(500).json({ message: "Erreur serveur" });
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 });
 
@@ -160,6 +159,29 @@ app.get("/api/products/mine", auth, async (req, res) => {
     res.status(500).json({ message: "Erreur serveur", error: err.message });
   }
 });
+
+// Supprimer un produit (Producer : seulement ses produits)
+app.delete("/api/products/:id", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "producer" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Produit introuvable" });
+
+    const isOwner = product.producer?.toString() === req.user.userId;
+    if (!isOwner && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Vous ne pouvez supprimer que vos produits" });
+    }
+
+    await product.deleteOne();
+    res.json({ message: "Produit supprimé" });
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
+  }
+});
+
 
 
 // Route GET /api/products (public)
