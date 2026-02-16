@@ -904,12 +904,68 @@ nextMonthContainer.innerHTML = forecastHtml;
       imageDataUrl = "panier-anti-gaspi-famille.png";
     }
 
-   try {
+const editingId = form.dataset.editingId;
+
+//  On prépare les données communes
+const payload = {
+  name,
+  description,
+  price,
+  category,
+  origin,
+  region,
+  dlc
+};
+
+// Si un fichier est choisi, on met l’image
+// Sinon, en modification on ne touche pas à l’image existante
+if (file) {
+  payload.image = imageDataUrl;
+}
+
+try {
+
   const token = getToken();
   if (!token) {
     window.location.href = "connexion.html";
     return;
   }
+
+  //  MODE MODIFICATION
+if (editingId) {
+  const res = await fetch(`${API_BASE}/api/products/${editingId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+   body: JSON.stringify(payload) 
+
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    messageEl.textContent = data.message || "Erreur modification.";
+    messageEl.classList.add("auth-error");
+    return;
+  }
+
+  delete form.dataset.editingId;
+
+  messageEl.textContent = "Produit modifié avec succès.";
+  messageEl.classList.add("auth-success");
+
+  form.reset();
+  await renderMyProducts();
+  await renderProducerOrders();
+  return;
+}
+
+// Si création et pas d'image choisie => fallback
+if (!file) {
+  payload.image = "panier-anti-gaspi-famille.png";
+}
 
   const res = await fetch(`${API_BASE}/api/products`, {
     method: "POST",
@@ -917,16 +973,8 @@ nextMonthContainer.innerHTML = forecastHtml;
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
-    body: JSON.stringify({
-      name,
-      description,
-      price,
-      category,
-      origin,
-      region,
-      dlc,
-      image: imageDataUrl
-    })
+    body: JSON.stringify(payload)
+
   });
 
 const data = await res.json().catch(() => ({}));
@@ -1023,14 +1071,14 @@ document.getElementById("my-products")?.addEventListener("click", async (e) => {
     const product = products.find(p => p._id === id);
     if (!product) return;
 
-    // Remplir le formulaire existant
-    document.querySelector("input[name='name']").value = product.name || "";
-    document.querySelector("textarea[name='description']").value = product.description || "";
-    document.querySelector("input[name='price']").value = product.price || "";
-    document.querySelector("input[name='category']").value = product.category || "";
-    document.querySelector("input[name='origin']").value = product.origin || "";
-    document.querySelector("input[name='region']").value = product.region || "";
-    document.querySelector("input[name='dlc']").value = product.dlc ? product.dlc.split("T")[0] : "";
+// Remplir le formulaire existant (avec les bons IDs)
+document.getElementById("prod-name").value = product.name || "";
+document.getElementById("prod-description").value = product.description || "";
+document.getElementById("prod-price").value = product.price ?? "";
+document.getElementById("prod-category").value = product.category || "";
+document.getElementById("prod-origin").value = product.origin || "";
+document.getElementById("prod-region").value = product.region || "";
+document.getElementById("prod-dlc").value = product.dlc ? String(product.dlc).slice(0, 10) : "";
 
     // On stocke l'id en mode édition
     form.dataset.editingId = id;

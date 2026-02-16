@@ -1349,3 +1349,71 @@ font-weight: 600;
 .btn-secondary:hover {
   background-color: #f0f0f0;
 }
+ 
+/* CSS istorique des produits publiés par le producteur */
+
+.product-card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  margin-bottom: 20px;
+}
+
+.product-card-top {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.product-thumb {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.product-meta h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.product-details {
+  margin: 10px 0;
+  padding-left: 16px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.product-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-edit-product {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-edit-product:hover {
+  background: #3f9442;
+}
+
+.btn-danger {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
