@@ -145,6 +145,23 @@ app.post("/api/products", auth, async (req, res) => {
   }
 });
 
+// Mes produits (Producer)
+app.get("/api/products/mine", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "producer" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const products = await Product.find({ producer: req.user.userId })
+      .sort({ createdAt: -1 });
+
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
+  }
+});
+
+
 // Route GET /api/products (public)
 app.get("/api/products", async (req, res) => {
   try {
@@ -264,7 +281,7 @@ app.get("/api/producer/orders", auth, async (req, res) => {
 
     // On récupère les produits de ce producteur
     const myProducts = await Product.find({ producer: req.user.userId }).select("_id");
-    const myProductIds = myProducts.map(p => p._id.toString());
+    const myProductIds = myProducts.map(p => p._id);
 
     // On récupère les commandes qui contiennent au moins un de ces produits
     const orders = await Order.find({ "items.product": { $in: myProductIds } })

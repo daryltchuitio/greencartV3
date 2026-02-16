@@ -175,7 +175,40 @@
     </footer>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const API_BASE = "http://localhost:4000";
+const TOKEN_KEY = "greencart_token";
+
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+async function apiGetProducerOrders() {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/api/producer/orders`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Erreur chargement commandes producteur");
+  return data;
+}
+
+async function apiPatchOrderStatus(orderId, status) {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/api/orders/${orderId}/status`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify({ status })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || "Erreur mise à jour statut");
+  return data;
+}
+
     const CURRENT_USER_KEY = "greencart_current_user";
     const PRODUCTS_KEY = "greencart_products";
     const ORDERS_KEY = "greencart_orders";
@@ -713,107 +746,92 @@ nextMonthContainer.innerHTML = forecastHtml;
 }
 
     // --- Affichage des commandes contenant les produits du producteur ---
-   function renderProducerOrders() {
-    const container = document.getElementById("producer-orders");
-    if (!container) return;
+   async function renderProducerOrders() {
+  const container = document.getElementById("producer-orders");
+  if (!container) return;
 
-    const allProducts = loadProducts();
-    const myProducts = allProducts.filter(p => p.producerId === user.id);
-    const myProductIds = myProducts.map(p => p.id);
+  container.innerHTML = '<p class="form-note">Chargement des commandes...</p>';
 
-    const allOrders = loadOrders();
+  try {
+    const orders = await apiGetProducerOrders();
 
-    const relevantOrders = [];
-
-    allOrders.forEach(order => {
-        const itemsForProducer = (order.items || []).filter(item => myProductIds.includes(item.id));
-        if (itemsForProducer.length > 0) {
-            relevantOrders.push({
-                ...order,
-                itemsForProducer
-            });
-        }
-    });
+    if (!Array.isArray(orders) || orders.length === 0) {
+      container.innerHTML = '<p class="form-note">Vous n’avez pas encore reçu de commande contenant vos produits.</p>';
+      return;
+    }
 
     container.innerHTML = "";
 
-    if (relevantOrders.length === 0) {
-        container.innerHTML = '<p class="form-note">Vous n’avez pas encore reçu de commande contenant vos produits.</p>';
-        return;
-    }
+    orders.forEach(order => {
+      const dateObj = new Date(order.createdAt || Date.now());
+      const dateStr = dateObj.toLocaleString("fr-FR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
 
-    relevantOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+      // items déjà filtrés par le backend (toutes les commandes contiennent au moins un de tes produits)
+      // MAIS la commande peut contenir des items d’autres producteurs.
+      // On va filtrer à l’affichage : items dont producer = toi.
+      const myUserId = user?.id; // user front (greencart_current_user)
+      const items = Array.isArray(order.items) ? order.items : [];
 
-    relevantOrders.forEach(order => {
-        const dateObj = new Date(order.date);
-        const dateStr = dateObj.toLocaleString("fr-FR", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit"
-        });
+      // Si le backend ne populate pas product, on se base sur la logique actuelle :
+      // order.items contient { product, name, price, qty } et on ne peut pas connaître le producer d’un item ici.
+      // Pour l’instant on affiche tous les items (simple), puis à l’étape suivante on améliore côté backend.
+      const itemsForProducer = items;
 
-        let linesHtml = "";
-        let totalProducer = 0;
-        let totalQty = 0;
+      let linesHtml = "";
+      let totalProducer = 0;
+      let totalQty = 0;
 
-        order.itemsForProducer.forEach(item => {
-            const lineTotal = (item.price * item.qty);
-            totalProducer += lineTotal;
-            totalQty += item.qty;
+      itemsForProducer.forEach(item => {
+        const lineTotal = (Number(item.price) * Number(item.qty));
+        totalProducer += lineTotal;
+        totalQty += Number(item.qty);
 
-            linesHtml += `
-                <li>
-                    <strong>${item.name}</strong> – ${item.qty} × ${item.price.toFixed(2)} €
-                    = ${lineTotal.toFixed(2)} €
-                </li>
-            `;
-        });
-
-        const statusValue = order.status || "en_preparation";
-
-        const card = document.createElement("article");
-        card.className = "order-card";
-
-        card.innerHTML = `
-            <h3>Commande du ${dateStr}</h3>
-            <p class="order-status">
-                <strong>Statut :</strong>
-                <select class="order-status-select" data-id="${order.id}">
-                    <option value="en_preparation" ${statusValue === "en_preparation" ? "selected" : ""}>En préparation</option>
-                    <option value="prete" ${statusValue === "prete" ? "selected" : ""}>Prête à retirer</option>
-                    <option value="terminee" ${statusValue === "terminee" ? "selected" : ""}>Terminée</option>
-                </select>
-            </p>
-            <p><strong>Nombre de produits à préparer :</strong> ${totalQty}</p>
-            <ul class="order-items">
-                ${linesHtml}
-            </ul>
-            <p class="order-total">
-                <strong>Total pour vos produits :</strong> ${totalProducer.toFixed(2)} €<br>
-                <span class="form-note">Montant total de la commande client : ${order.total.toFixed(2)} €</span>
-            </p>
+        linesHtml += `
+          <li>
+            <strong>${item.name}</strong> – ${Number(item.qty)} × ${Number(item.price).toFixed(2)} €
+            = ${lineTotal.toFixed(2)} €
+          </li>
         `;
+      });
 
-        container.appendChild(card);
+      const statusValue = order.status || "en_preparation";
+
+      const card = document.createElement("article");
+      card.className = "order-card";
+
+      card.innerHTML = `
+        <h3>Commande du ${dateStr}</h3>
+        <p class="order-status">
+          <strong>Statut :</strong>
+          <select class="order-status-select" data-id="${order._id}">
+            <option value="en_preparation" ${statusValue === "en_preparation" ? "selected" : ""}>En préparation</option>
+            <option value="prete" ${statusValue === "prete" ? "selected" : ""}>Prête à retirer</option>
+            <option value="terminee" ${statusValue === "terminee" ? "selected" : ""}>Terminée</option>
+          </select>
+        </p>
+        <p><strong>Nombre de produits à préparer :</strong> ${totalQty}</p>
+        <ul class="order-items">${linesHtml}</ul>
+        <p class="order-total">
+          <strong>Total pour vos produits :</strong> ${totalProducer.toFixed(2)} €<br>
+          <span class="form-note">Montant total de la commande client : ${Number(order.total || totalProducer).toFixed(2)} €</span>
+        </p>
+      `;
+
+      container.appendChild(card);
     });
 
-    // Gestion du changement de statut
-    container.querySelectorAll(".order-status-select").forEach(select => {
-        select.addEventListener("change", () => {
-            const newStatus = select.value;
-            const orderId = select.dataset.id;
-
-            const allOrders = loadOrders();
-            const idx = allOrders.findIndex(o => o.id === orderId);
-            if (idx !== -1) {
-                allOrders[idx].status = newStatus;
-                localStorage.setItem(ORDERS_KEY, JSON.stringify(allOrders));
-            }
-        });
-    });
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `<p class="form-note">Erreur : ${err.message}</p>`;
+  }
 }
+
 
 
     // --- Gestion du formulaire de publication ---
@@ -903,6 +921,21 @@ nextMonthContainer.innerHTML = forecastHtml;
 
     renderMyProducts();
     renderProducerOrders();
+
+    document.getElementById("producer-orders")?.addEventListener("change", async (e) => {
+  const sel = e.target.closest(".order-status-select");
+  if (!sel) return;
+
+  const orderId = sel.dataset.id;
+  const status = sel.value;
+
+  try {
+    await apiPatchOrderStatus(orderId, status);
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
     renderForecasts(); 
     renderSegments();
 });
