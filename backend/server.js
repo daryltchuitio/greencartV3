@@ -161,6 +161,30 @@ app.get("/api/products/mine", auth, async (req, res) => {
   }
 });
 
+// Archiver un produit (Producer : seulement ses produits)
+app.patch("/api/products/:id/archive", auth, async (req, res) => {
+  try {
+    if (req.user.role !== "producer" && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Accès refusé" });
+    }
+
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Produit introuvable" });
+
+    const isOwner = product.producer?.toString() === req.user.userId;
+    if (!isOwner && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Vous ne pouvez archiver que vos produits" });
+    }
+
+    product.isActive = false;
+    await product.save();
+
+    res.json({ message: "Produit archivé", product });
+  } catch (err) {
+    res.status(500).json({ message: "Erreur serveur", error: err.message });
+  }
+});
+
 // Supprimer un produit (Producer : seulement ses produits)
 app.delete("/api/products/:id", auth, async (req, res) => {
   try {
@@ -211,7 +235,7 @@ app.patch("/api/products/:id", auth, async (req, res) => {
 app.get("/api/products", async (req, res) => {
   try {
     // produits + nom du producteur
-    const products = await Product.find().populate("producer", "name").lean();
+    const products = await Product.find({ isActive: true }).populate("producer", "name").lean();
 
     const productIds = products.map((p) => p._id);
 

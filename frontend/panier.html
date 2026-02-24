@@ -248,7 +248,7 @@
         }
         
         // On envoie au backend uniquement ce qu'il faut : productId + qty
-        // Dans ton panier local, l'id correspond maintenant au _id Mongo (depuis catalogue API)
+        // Dans le panier local, l'id correspond maintenant au _id Mongo (depuis catalogue API)
         const items = cart.map((p) => ({
             productId: p.id,
             qty: p.qty

@@ -105,6 +105,7 @@
             </div>
 
             <button type="submit" class="btn-primary">Publier le produit</button>
+            <button type="button" id="cancel-edit" class="btn-cancel" style="display:none;">Annuler modification</button>
             <p id="product-message" class="form-note auth-message"></p>
         </form>
     </article>
@@ -731,7 +732,7 @@ nextMonthContainer.innerHTML = forecastHtml;
 
         <div class="product-actions">
             <button class="btn-edit-product" data-id="${p._id}">Modifier</button>
-            <button class="btn-danger btn-delete-product" data-id="${p._id}">Supprimer</button>
+            <button class="btn-danger btn-archive-product" data-id="${p._id}">Archiver</button>
             </div>
       `;
 
@@ -834,6 +835,11 @@ nextMonthContainer.innerHTML = forecastHtml;
           <strong>Total pour vos produits :</strong> ${totalProducer.toFixed(2)} €<br>
           <span class="form-note">Montant total de la commande client : ${Number(order.total || totalProducer).toFixed(2)} €</span>
         </p>
+        <p class="form-note">
+            <strong>Commande :</strong> ${order._id}<br>
+            <strong>Client :</strong> ${order.user?.name || "—"} (${order.user?.email || "—"})<br>
+            <strong>Date :</strong> ${dateStr}
+            </p>
       `;
 
       container.appendChild(card);
@@ -1029,26 +1035,26 @@ if (!res.ok) {
     renderForecasts(); 
     renderSegments();
 
-// --- Gestion de la suppression d’un produit ---
-    document.getElementById("my-products")?.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".btn-delete-product");
+// --- Gestion de l'archivage d’un produit ---
+document.getElementById("my-products")?.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".btn-archive-product");
   if (!btn) return;
 
   const id = btn.dataset.id;
-  if (!confirm("Supprimer ce produit ?")) return;
+  if (!confirm("Archiver ce produit ? (il disparaîtra du catalogue)")) return;
 
   try {
     const token = getToken();
-    const res = await fetch(`${API_BASE}/api/products/${id}`, {
-      method: "DELETE",
+    const res = await fetch(`${API_BASE}/api/products/${id}/archive`, {
+      method: "PATCH",
       headers: { Authorization: `Bearer ${token}` }
     });
 
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.message || `Erreur suppression (${res.status})`);
+    if (!res.ok) throw new Error(data.message || `Erreur archivage (${res.status})`);
 
     await renderMyProducts();
-    await renderProducerOrders(); // pour recalculer correctement les commandes reçues liées aux produits
+    await renderProducerOrders();
   } catch (err) {
     alert(err.message);
   }
@@ -1083,12 +1089,24 @@ document.getElementById("prod-dlc").value = product.dlc ? String(product.dlc).sl
     // On stocke l'id en mode édition
     form.dataset.editingId = id;
 
+    document.getElementById("cancel-edit").style.display = "inline-block";
+    document.querySelector("#product-form button[type='submit']").textContent = "Enregistrer modifications";
+
     window.scrollTo({ top: 0, behavior: "smooth" });
 
   } catch (err) {
     alert("Erreur chargement produit.");
   }
 });
+
+document.getElementById("cancel-edit")?.addEventListener("click", () => {
+  delete form.dataset.editingId;
+  form.reset();
+
+  document.getElementById("cancel-edit").style.display = "none";
+  document.querySelector("#product-form button[type='submit']").textContent = "Publier le produit";
+});
+
 
 });
 </script>

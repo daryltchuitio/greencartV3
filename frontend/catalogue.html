@@ -116,7 +116,7 @@
                 <!-- LISTE DES PANIERS -->
                  <div class="catalogue-grid catalogue-list" id="catalogue-list">
                     <!-- Les produits seront injectés ici par JavaScript -->
-</div>
+                 </div>
 </section>
 </main>
 
@@ -257,7 +257,7 @@ async function openReviewsModal(productId) {
       const article = document.createElement("article");
       article.className = "product-card";
 
-      // IMPORTANT: on utilise l'id Mongo
+      // On utilise l'id Mongo
       article.dataset.id = p._id;
       article.dataset.name = p.name;
       article.dataset.price = p.price;
@@ -297,7 +297,7 @@ async function openReviewsModal(productId) {
         <button class="btn-primary add-to-cart">Ajouter au panier</button>
       `;
 
-      // On ajoute à la fin de la liste (après tes produits statiques)
+      // On ajoute à la fin de la liste (après les produits statiques, ils seroont supprimés plus tard)
       listEl.appendChild(article);
     });
 
