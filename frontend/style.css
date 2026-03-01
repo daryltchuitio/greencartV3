@@ -1417,3 +1417,46 @@ font-weight: 600;
   background: #c0392b;
 }
 
+/* Commandes grisées */
+.order-card {
+  background: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  margin-bottom: 16px;
+}
+
+.order-meta {
+  margin: 8px 0 12px;
+  color: #555;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.order-card--done {
+  opacity: 0.6;
+  filter: grayscale(0.8);
+}
+
+.order-card--done .order-status-select {
+  cursor: not-allowed;
+}
+
+.order-badge {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
+
+.order-badge.done {
+  background: #e0e0e0;
+  color: #555;
+}
+
+.order-badge.active {
+  background: #d7f5d8;
+  color: #2c6b2d;
+}

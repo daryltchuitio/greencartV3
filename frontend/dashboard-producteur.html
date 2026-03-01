@@ -814,44 +814,80 @@ nextMonthContainer.innerHTML = forecastHtml;
         `;
       });
 
-      const statusValue = order.status || "en_preparation";
+    const statusValue = order.status || "en_preparation";
 
-      const card = document.createElement("article");
-      card.className = "order-card";
+    const isDone = statusValue === "terminee";
 
-      card.innerHTML = `
+    const card = document.createElement("article");
+    card.className = isDone ? "order-card order-card--done" : "order-card";
+    card.dataset.orderId = order._id;
+
+    card.innerHTML = `
         <h3>Commande du ${dateStr}</h3>
         <p class="order-status">
-          <strong>Statut :</strong>
-          <select class="order-status-select" data-id="${order._id}">
+            <strong>Statut :</strong>
+            <select class="order-status-select" data-id="${order._id}" ${isDone ? "disabled" : ""}>
             <option value="en_preparation" ${statusValue === "en_preparation" ? "selected" : ""}>En préparation</option>
             <option value="prete" ${statusValue === "prete" ? "selected" : ""}>Prête à retirer</option>
             <option value="terminee" ${statusValue === "terminee" ? "selected" : ""}>Terminée</option>
-          </select>
+            </select>
         </p>
+        ${isDone ? '<span class="order-badge done">Terminée</span>' : '<span class="order-badge active">Active</span>'}
         <p><strong>Nombre de produits à préparer :</strong> ${totalQty}</p>
         <ul class="order-items">${linesHtml}</ul>
         <p class="order-total">
-          <strong>Total pour vos produits :</strong> ${totalProducer.toFixed(2)} €<br>
-          <span class="form-note">Montant total de la commande client : ${Number(order.total || totalProducer).toFixed(2)} €</span>
+            <strong>Total pour vos produits :</strong> ${totalProducer.toFixed(2)} €<br>
+            <span class="form-note">Montant total de la commande client : ${Number(order.total || totalProducer).toFixed(2)} €</span>
         </p>
         <p class="form-note">
             <strong>Commande :</strong> ${order._id}<br>
             <strong>Client :</strong> ${order.user?.name || "—"} (${order.user?.email || "—"})<br>
             <strong>Date :</strong> ${dateStr}
             </p>
-      `;
-
-      container.appendChild(card);
+    `;
+    container.appendChild(card);
     });
 
-  } catch (err) {
+    } catch (err) {
     console.error(err);
     container.innerHTML = `<p class="form-note">Erreur : ${err.message}</p>`;
-  }
-}
+    }
+    }
 
+    document.getElementById("producer-orders")?.addEventListener("change", async (e) => {
+    const sel = e.target.closest(".order-status-select");
+    if (!sel) return;
 
+    const orderId = sel.dataset.id;
+    const status = sel.value;
+    const card = sel.closest(".order-card");
+
+    try {
+    await apiPatchOrderStatus(orderId, status);
+
+    // Mise à jour instantanée du DOM
+    if (status === "terminee") {
+      card.classList.add("order-card--done");
+      sel.disabled = true;
+      const badge = card.querySelector(".order-badge");
+      if (badge) {
+        badge.className = "order-badge done";
+        badge.textContent = "Terminée";
+      }
+    } else {
+      card.classList.remove("order-card--done");
+      sel.disabled = false;
+      const badge = card.querySelector(".order-badge");
+      if (badge) {
+        badge.className = "order-badge active";
+        badge.textContent = "Active";
+      }
+    }
+
+    } catch (err) {
+    alert(err.message);
+    }
+    });
 
     // --- Gestion du formulaire de publication ---
     const form = document.getElementById("product-form");
