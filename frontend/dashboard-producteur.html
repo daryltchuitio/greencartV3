@@ -709,10 +709,13 @@ nextMonthContainer.innerHTML = forecastHtml;
     products.forEach(p => {
       const created = p.createdAt ? new Date(p.createdAt).toLocaleDateString("fr-FR") : "";
       const dlc = p.dlc ? new Date(p.dlc).toLocaleDateString("fr-FR") : "—";
-      const img = p.image || "panier-anti-gaspi-famille.png";
-
+      const img = p.image || "panier-anti-gaspi-famille.png"; 
+      
       const card = document.createElement("article");
+      const isArchived = p.isActive === false;
       card.className = "product-card";
+      card.className = isArchived ? "product-card product-card--archived" : "product-card";
+
       card.innerHTML = `
         <div class="product-card-top">
           <img src="${img}" alt="${p.name}" class="product-thumb">
@@ -731,11 +734,11 @@ nextMonthContainer.innerHTML = forecastHtml;
         </ul>
 
         <div class="product-actions">
-            <button class="btn-edit-product" data-id="${p._id}">Modifier</button>
-            <button class="btn-danger btn-archive-product" data-id="${p._id}">Archiver</button>
-            </div>
+        <button class="btn-edit-product" data-id="${p._id}" ${isArchived ? "disabled" : ""}>Modifier</button>
+        <button class="btn-danger btn-archive-product" data-id="${p._id}" ${isArchived ? "disabled" : ""}>Archiver</button>
+        ${isArchived ? `<span class="archived-badge">✓ Produit archivé</span>` : ""}
+        </div>
       `;
-
       container.appendChild(card);
     });
 
@@ -1073,49 +1076,27 @@ if (!res.ok) {
 
 // --- Gestion de l'archivage d'un produit ---
 document.getElementById("my-products")?.addEventListener("click", async (e) => {
-    const btn = e.target.closest(".btn-archive-product");
-    if (!btn) return;
+  const btn = e.target.closest(".btn-archive-product");
+  if (!btn) return;
 
-    const id = btn.dataset.id;
-    if (!confirm("Archiver ce produit ? (il disparaîtra du catalogue)")) return;
+  const id = btn.dataset.id;
+  if (!confirm("Archiver ce produit ? (il disparaîtra du catalogue)")) return;
 
-    try {
-        const token = getToken();
-        const res = await fetch(`${API_BASE}/api/products/${id}/archive`, {
-            method: "PATCH",
-            headers: { Authorization: `Bearer ${token}` }
-        });
+  try {
+    const token = getToken();
+    const res = await fetch(`${API_BASE}/api/products/${id}/archive`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.message || `Erreur archivage (${res.status})`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || `Erreur archivage (${res.status})`);
 
-        // Trouver la carte du produit et la griser
-        const card = btn.closest(".product-card");
-        if (card) {
-            card.classList.add("archived");
-            card.style.opacity = "0.5";
-            card.style.pointerEvents = "none";
-            
-            // Bloquer les boutons
-            const editBtn = card.querySelector(".btn-edit-product");
-            const archiveBtn = card.querySelector(".btn-archive-product");
-            if (editBtn) editBtn.disabled = true;
-            if (archiveBtn) archiveBtn.disabled = true;
-            
-            // Ajouter un badge ou message
-            const actionsDiv = card.querySelector(".product-actions");
-            if (actionsDiv) {
-                const archivedLabel = document.createElement("p");
-                archivedLabel.className = "form-note";
-                archivedLabel.textContent = "✓ Produit archivé";
-                actionsDiv.appendChild(archivedLabel);
-            }
-        }
-
-        await renderProducerOrders();
-    } catch (err) {
-        alert(err.message);
-    }
+    await renderMyProducts();       
+    await renderProducerOrders();
+  } catch (err) {
+    alert(err.message);
+  }
 });
 
 // --- Gestion de la modification d’un produit publié ---

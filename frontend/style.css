@@ -1417,7 +1417,7 @@ font-weight: 600;
   background: #c0392b;
 }
 
-/* Commandes grisées */
+/* Commandes terminées grisées */
 .order-card {
   background: #fff;
   padding: 16px;
@@ -1460,3 +1460,54 @@ font-weight: 600;
   background: #d7f5d8;
   color: #2c6b2d;
 }
+
+/* Griser les produits archivés */
+.product-card--archived {
+  opacity: 0.55;
+  filter: grayscale(0.8);
+}
+
+.product-card--archived .product-actions {
+  pointer-events: none;
+}
+
+.archived-badge {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 0.85rem;
+  color: #555;
+  background: #eee;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+
+.product-card.product-card--archived {
+  opacity: 0.55 !important;
+  filter: grayscale(0.9) !important;
+}
+
+.product-card.product-card--archived .product-card-top,
+.product-card.product-card--archived .product-details,
+.product-card.product-card--archived .product-actions {
+  opacity: 0.95 !important;
+}
+
+.product-card.product-card--archived .btn-edit-product,
+.product-card.product-card--archived .btn-archive-product {
+  background: #ddd !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+}
+
+/* empêche l'effet hover "fonce" même si disabled */
+.product-card.product-card--archived .btn-edit-product:hover,
+.product-card.product-card--archived .btn-archive-product:hover,
+.product-card.product-card--archived .btn-danger:hover {
+  filter: none !important;
+  background: #ddd !important;
+}
+
+.product-card.product-card--archived .product-actions {
+  pointer-events: none;
+}  /* ça empêchera aussi un éventuel bouton “Restaurer” on l’ajoutes dans product-actions plus tard, donc faudra revoir ça à ce moment-là */
